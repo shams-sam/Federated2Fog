@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from sklearn.model_selection import train_test_split
 import syft as sy
 
 
@@ -18,6 +19,25 @@ def get_cluster_sizes(total, num_parts, uniform=True):
             parts.append(crossover[i]-crossover[i-1])
 
     return parts
+
+
+def get_distributed_data(X_train, y_train, num_parts,
+                         stratify=True, repeat=False, uniform=True):
+    X_trains = []
+    y_trains = []
+
+    for i in range(num_parts-1):
+        X_train, X_iter, y_train, y_iter = train_test_split(
+            X_train, y_train, stratify=y_train, test_size=1/(num_parts-i))
+        X_trains.append(X_iter)
+        y_trains.append(y_iter)
+
+    X_trains.append(X_train)
+    y_trains.append(y_train)
+
+    assert len(X_trains) == num_parts
+
+    return X_trains, y_trains
 
 
 def get_fog_graph(hook, num_workers, num_clusters,
