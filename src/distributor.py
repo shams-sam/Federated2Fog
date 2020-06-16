@@ -40,23 +40,45 @@ def get_distributed_data(X_train, y_train, num_parts,
     return X_trains, y_trains
 
 
+def get_distributed_data_using_loader(train_loader):
+    X_trains = []
+    y_trains = []
+
+    for batch_idx, (data, target) in enumerate(train_loader):
+        X_trains.append(data)
+        y_trains.append(target)
+
+    return X_trains, y_trains
+
+
 def get_fog_graph(hook, num_workers, num_clusters,
-                  shuffle_workers=True, uniform_clusters=True):
+                  shuffle_workers=True, uniform_clusters=True, fog=True):
     # Define workers and layers
     workers = {}
+    agg_map = {}
     layer = 0
     for id_ in range(num_workers):
         name = 'L{}_W{}'.format(layer, id_)
         workers[name] = sy.VirtualWorker(hook, id=name)
 
     layer = 1
+
+    if not fog:
+        # single layer model averaging fl
+        name = 'L1_W0'
+        workers[name] = sy.VirtualWorker(hook, id=name)
+        worker_ids = [_ for _ in workers.keys() if 'L0' in _]
+        agg_map[name] = worker_ids
+
+        return agg_map, workers
+
     for num_cluster in num_clusters:
+        # multi layer aggregation fog learning
         for id_ in range(num_cluster):
             name = 'L{}_W{}'.format(layer, id_)
             workers[name] = sy.VirtualWorker(hook, id=name)
         layer += 1
 
-    agg_map = {}
     for l in range(1, len(num_clusters)+1):
         clustr_ids = [_ for _ in workers.keys() if 'L{}'.format(l) in _]
         worker_ids = [_ for _ in workers.keys() if 'L{}'.format(l-1) in _]

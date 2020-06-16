@@ -1,11 +1,14 @@
 import numpy as np
 import torch
+import torch.nn.functional as F
 import torch.optim as optim
 
 
 def get_model_weights(model, scaling_factor=1):
+
     if scaling_factor == 1:
         return model.state_dict()
+
     else:
         weights = model.state_dict()
         for key, val in weights.items():
@@ -14,14 +17,17 @@ def get_model_weights(model, scaling_factor=1):
 
 
 def add_model_weights(weights1, weights2):
+
     for key, val in weights2.items():
         weights1[key] += val
 
     return weights1
 
 
-# Train using the fog aggregation
-def fog_train(args, model, fog_graph, nodes, X_trains, y_trains, device, epoch):
+def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
+              device, epoch):
+    # fog learning with model averaging
+
     model.train()
 
     worker_data = {}
@@ -83,6 +89,91 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains, device, epoch):
         epoch,
         loss.mean(), loss.std()
     ))
+
+
+def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
+             device, epoch):
+    # federated learning with model averaging
+
+    model.train()
+
+    worker_data = {}
+    worker_targets = {}
+    worker_num_samples = {}
+    worker_models = {}
+    worker_optims = {}
+    worker_losses = {}
+
+    # send data, model to workers
+    # setup optimizer for each worker
+
+    workers = [_ for _ in nodes.keys() if 'L0' in _]
+    for w, x, y in zip(workers, X_trains, y_trains):
+        worker_data[w] = x.send(nodes[w])
+        worker_targets[w] = y.send(nodes[w])
+        worker_num_samples[w] = x.shape[0]
+
+    for w in workers:
+        worker_models[w] = model.copy().send(nodes[w])
+        worker_optims[w] = optim.SGD(
+            params=worker_models[w].parameters(), lr=args.lr)
+
+        data = worker_data[w]
+        target = worker_targets[w]
+        data, target = data.to(device), target.to(device)
+        worker_optims[w].zero_grad()
+        output = worker_models[w](data)
+        loss = F.nll_loss(output, target)
+        loss.backward()
+        worker_optims[w].step()
+        worker_losses[w] = loss.get().data
+
+    agg = 'L1_W0'
+    worker_models[agg] = model.copy().send(nodes[agg])
+    children = fog_graph[agg]
+
+    for child in children:
+        worker_models[child].move(nodes[agg])
+
+    with torch.no_grad():
+        weighted_models = [get_model_weights(
+            worker_models[_],
+            worker_num_samples[_]/args.num_train) for _ in children]
+        model_sum = weighted_models[0]
+        for m in weighted_models[1:]:
+            model_sum = add_model_weights(model_sum, m)
+        worker_models[agg].load_state_dict(model_sum)
+
+    master = get_model_weights(worker_models[agg].get())
+    model.load_state_dict(master)
+
+    loss = np.array([_.cpu().numpy() for dump, _ in worker_losses.items()])
+    print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f}'.format(
+        epoch,
+        loss.mean(), loss.std()
+    ))
+
+
+def fl_train_with_fl(args, model, device, train_loader, optimizer, epoch):
+    # federated learing with federated loader
+    model.train()
+    total = 0
+    for batch_idx, (data, target) in enumerate(train_loader):
+        total += data.shape[0]
+        model.send(data.location)
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = F.nll_loss(output, target)
+        loss.backward()
+        optimizer.step()
+        model.get()
+        if batch_idx % args.log_interval == 0:
+            loss = loss.get()
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * args.batch_size,
+                len(train_loader) * args.batch_size,
+                100. * batch_idx / len(train_loader), loss.item()))
 
 
 # Test
