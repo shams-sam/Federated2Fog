@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader
 
 
 def get_model_weights(model, scaling_factor=1):
@@ -22,6 +23,13 @@ def add_model_weights(weights1, weights2):
         weights1[key] += val
 
     return weights1
+
+
+def get_dataloader(data, targets, batchsize, shuffle=True):
+    dataset = TensorDataset(data, targets)
+
+    return DataLoader(dataset, batch_size=batchsize,
+                      shuffle=shuffle, num_workers=1)
 
 
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
@@ -48,18 +56,23 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
 
     for w in workers:
         worker_models[w] = model.copy().send(nodes[w])
+        node_model = worker_models[w].get()
         worker_optims[w] = optim.SGD(
             params=worker_models[w].parameters(), lr=args.lr)
 
-        data = worker_data[w]
-        target = worker_targets[w]
-        data, target = data.to(device), target.to(device)
-        worker_optims[w].zero_grad()
-        output = worker_models[w](data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
-        worker_optims[w].step()
-        worker_losses[w] = loss.get().data
+        data = worker_data[w].get()
+        target = worker_targets[w].get()
+        dataloader = get_dataloader(data, target, args.batch_size)
+
+        for data, target in dataloader:
+            data, target = data.to(device), target.to(device)
+            worker_optims[w].zero_grad()
+            output = node_model(data)
+            loss = F.nll_loss(output, target)
+            loss.backward()
+            worker_optims[w].step()
+        worker_models[w] = node_model.send(nodes[w])
+        worker_losses[w] = loss.item()
 
     for l in range(1, len(args.num_clusters)+1):
         aggregators = [_ for _ in nodes.keys() if 'L{}'.format(l) in _]
@@ -84,11 +97,12 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                                1/args.num_train)
     model.load_state_dict(master)
 
-    loss = np.array([_.cpu().numpy() for dump, _ in worker_losses.items()])
-    print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f}'.format(
-        epoch,
-        loss.mean(), loss.std()
-    ))
+    if epoch % args.log_interval == 0:
+        loss = np.array([_ for dump, _ in worker_losses.items()])
+        print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f}'.format(
+            epoch,
+            loss.mean(), loss.std()
+        ))
 
 
 def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
@@ -115,18 +129,23 @@ def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
 
     for w in workers:
         worker_models[w] = model.copy().send(nodes[w])
+        node_model = worker_models[w].get()
         worker_optims[w] = optim.SGD(
             params=worker_models[w].parameters(), lr=args.lr)
 
-        data = worker_data[w]
-        target = worker_targets[w]
-        data, target = data.to(device), target.to(device)
-        worker_optims[w].zero_grad()
-        output = worker_models[w](data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
-        worker_optims[w].step()
-        worker_losses[w] = loss.get().data
+        data = worker_data[w].get()
+        target = worker_targets[w].get()
+        dataloader = get_dataloader(data, target, args.batch_size)
+
+        for data, target in dataloader:
+            data, target = data.to(device), target.to(device)
+            worker_optims[w].zero_grad()
+            output = node_model(data)
+            loss = F.nll_loss(output, target)
+            loss.backward()
+            worker_optims[w].step()
+        worker_models[w] = node_model.send(nodes[w])
+        worker_losses[w] = loss.item()
 
     agg = 'L1_W0'
     worker_models[agg] = model.copy().send(nodes[agg])
@@ -147,11 +166,12 @@ def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
     master = get_model_weights(worker_models[agg].get())
     model.load_state_dict(master)
 
-    loss = np.array([_.cpu().numpy() for dump, _ in worker_losses.items()])
-    print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f}'.format(
-        epoch,
-        loss.mean(), loss.std()
-    ))
+    if epoch % args.log_interval == 0:
+        loss = np.array([_ for dump, _ in worker_losses.items()])
+        print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f}'.format(
+            epoch,
+            loss.mean(), loss.std()
+        ))
 
 
 def fl_train_with_fl(args, model, device, train_loader, optimizer, epoch):
@@ -177,7 +197,7 @@ def fl_train_with_fl(args, model, device, train_loader, optimizer, epoch):
 
 
 # Test
-def test(args, model, device, test_loader, best):
+def test(args, model, device, test_loader, best, epoch=0):
     model.eval()
     test_loss = 0
     correct = 0
@@ -191,12 +211,11 @@ def test(args, model, device, test_loader, best):
 
     test_loss /= len(test_loader.dataset)
     accuracy = correct / len(test_loader.dataset)
-    if accuracy > best:
-        best = accuracy
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%) ==> '
-          '{:.2f}%'.format(
-              test_loss, correct, len(test_loader.dataset),
-              100.*accuracy, 100.*best))
+    if epoch % args.log_interval == 0:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%) ==> '
+              '{:.2f}%'.format(
+                  test_loss, correct, len(test_loader.dataset),
+                  100.*accuracy, 100.*best))
 
-    return best
+    return accuracy

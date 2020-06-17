@@ -11,8 +11,8 @@ class Arguments():
         self.shuffle_workers = True
         self.batch_size = ceil(self.num_train/self.num_workers)
         self.test_batch_size = self.num_test
-        self.epochs = 10
-        self.lr = 0.1
+        self.epochs = 200
+        self.lr = 0.06
         self.momentum = 0.5
         self.no_cuda = False
         self.seed = 1
