@@ -12,7 +12,7 @@ class Arguments():
         self.batch_size = ceil(self.num_train/self.num_workers)
         self.test_batch_size = self.num_test
         self.epochs = 200
-        self.lr = 0.06
+        self.lr = 0.03
         self.momentum = 0.5
         self.no_cuda = False
         self.seed = 1
@@ -20,4 +20,7 @@ class Arguments():
         self.save_model = True
         self.save_init = False
         self.load_init = True
-
+        self.stratify = True
+        self.uniform_data = True
+        self.shuffle_data = True
+        self.non_iid = 4

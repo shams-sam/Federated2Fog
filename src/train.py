@@ -1,3 +1,4 @@
+from multi_class_hinge_loss import multiClassHingeLoss
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -33,8 +34,13 @@ def get_dataloader(data, targets, batchsize, shuffle=True):
 
 
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
-              device, epoch):
+              device, epoch, loss_fn='nll'):
     # fog learning with model averaging
+
+    if loss_fn == 'nll':
+        loss_fn_ = F.nll_loss
+    elif loss_fn == 'hinge':
+        loss_fn_ = multiClassHingeLoss()
 
     model.train()
 
@@ -58,8 +64,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
         worker_models[w] = model.copy().send(nodes[w])
         node_model = worker_models[w].get()
         worker_optims[w] = optim.SGD(
-            params=worker_models[w].parameters(), lr=args.lr)
-
+            params=node_model.parameters(), lr=args.lr)
         data = worker_data[w].get()
         target = worker_targets[w].get()
         dataloader = get_dataloader(data, target, args.batch_size)
@@ -68,7 +73,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
             data, target = data.to(device), target.to(device)
             worker_optims[w].zero_grad()
             output = node_model(data)
-            loss = F.nll_loss(output, target)
+            loss = loss_fn_(output, target)
             loss.backward()
             worker_optims[w].step()
         worker_models[w] = node_model.send(nodes[w])
@@ -197,7 +202,13 @@ def fl_train_with_fl(args, model, device, train_loader, optimizer, epoch):
 
 
 # Test
-def test(args, model, device, test_loader, best, epoch=0):
+def test(args, model, device, test_loader, best, epoch=0, loss_fn='nll'):
+
+    if loss_fn == 'nll':
+        loss_fn_ = F.nll_loss
+    elif loss_fn == 'hinge':
+        loss_fn_ = multiClassHingeLoss()
+
     model.eval()
     test_loss = 0
     correct = 0
@@ -205,7 +216,10 @@ def test(args, model, device, test_loader, best, epoch=0):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item()
+            if loss_fn == 'nll':
+                test_loss += loss_fn_(output, target, reduction='sum').item()
+            elif loss_fn == 'hinge':
+                test_loss += loss_fn_(output, target).item()
             pred = output.argmax(1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
 
