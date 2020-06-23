@@ -111,8 +111,13 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
 
 
 def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
-             device, epoch):
+             device, epoch, loss_fn='nll'):
     # federated learning with model averaging
+
+    if loss_fn == 'nll':
+        loss_fn_ = F.nll_loss
+    elif loss_fn == 'hinge':
+        loss_fn_ = multiClassHingeLoss()
 
     model.train()
 
@@ -146,7 +151,7 @@ def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
             data, target = data.to(device), target.to(device)
             worker_optims[w].zero_grad()
             output = node_model(data)
-            loss = F.nll_loss(output, target)
+            loss = loss_fn_(output, target)
             loss.backward()
             worker_optims[w].step()
         worker_models[w] = node_model.send(nodes[w])

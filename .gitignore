@@ -131,3 +131,6 @@ dmypy.json
 # User Added
 data/*
 ckpts/*
+history/*
+init/*
+plots/*
