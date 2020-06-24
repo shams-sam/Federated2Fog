@@ -16,7 +16,7 @@ class Arguments():
         self.momentum = 0.5
         self.no_cuda = False
         self.seed = 1
-        self.log_interval = 10
+        self.log_interval = 1
         self.save_model = True
         self.save_init = False
         self.load_init = True
@@ -24,3 +24,7 @@ class Arguments():
         self.uniform_data = True
         self.shuffle_data = True
         self.non_iid = 4
+        # laplacian consensus
+        self.rounds = 5
+        self.radius = 2
+        self.d = 1/15

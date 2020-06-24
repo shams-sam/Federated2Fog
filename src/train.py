@@ -1,4 +1,7 @@
+from collections import OrderedDict
 from multi_class_hinge_loss import multiClassHingeLoss
+from networkx import laplacian_matrix
+from networkx.generators.geometric import random_geometric_graph
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -26,6 +29,44 @@ def add_model_weights(weights1, weights2):
     return weights1
 
 
+def averaging_consensus(cluster, models, weights):
+    with torch.no_grad():
+        weighted_models = [get_model_weights(models[_], weights[_])
+                           for _ in cluster]
+        model_sum = weighted_models[0]
+        for m in weighted_models[1:]:
+            model_sum = add_model_weights(model_sum, m)
+
+    return model_sum
+
+
+def laplacian_average(models, V, num_nodes, rounds):
+    model = OrderedDict()
+    idx = np.random.randint(0, num_nodes)
+    for key, val in models[0].items():
+        size = val.size()
+        initial = torch.stack([_[key] for _ in models])
+        final = torch.matmul(torch.matrix_power(V, rounds),
+                             initial.reshape(num_nodes, -1))*num_nodes
+        model[key] = final[idx].reshape(size)
+
+    return model
+
+
+def laplacian_consensus(cluster, models, weights, device,
+                        rounds=50, radius=2, d=1/15):
+    num_nodes = len(cluster)
+    graph = random_geometric_graph(num_nodes, radius)
+    L = laplacian_matrix(graph).toarray()
+    V = torch.Tensor(np.eye(num_nodes) - d*L).to(device)
+    with torch.no_grad():
+        weighted_models = [get_model_weights(models[_].get(), weights[_])
+                           for _ in cluster]
+        model_sum = laplacian_average(weighted_models, V, num_nodes, rounds)
+
+    return model_sum
+
+
 def get_dataloader(data, targets, batchsize, shuffle=True):
     dataset = TensorDataset(data, targets)
 
@@ -34,7 +75,8 @@ def get_dataloader(data, targets, batchsize, shuffle=True):
 
 
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
-              device, epoch, loss_fn='nll'):
+              device, epoch, loss_fn='nll', consensus='averaging',
+              rounds=50, radius=2, d=1/15):
     # fog learning with model averaging
 
     if loss_fn == 'nll':
@@ -64,7 +106,8 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
         worker_models[w] = model.copy().send(nodes[w])
         node_model = worker_models[w].get()
         worker_optims[w] = optim.SGD(
-            params=node_model.parameters(), lr=args.lr)
+            params=node_model.parameters(), lr=args.lr,
+            weight_decay=1e-5 if loss_fn=='hinge' else 0)
         data = worker_data[w].get()
         target = worker_targets[w].get()
         dataloader = get_dataloader(data, target, args.batch_size)
@@ -89,13 +132,19 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
             for child in children:
                 worker_models[child].move(nodes[a])
 
-            with torch.no_grad():
-                weighted_models = [get_model_weights(
-                    worker_models[_], worker_num_samples[_])for _ in children]
-                model_sum = weighted_models[0]
-                for m in weighted_models[1:]:
-                    model_sum = add_model_weights(model_sum, m)
+            if consensus == 'averaging':
+                model_sum = averaging_consensus(children, worker_models,
+                                                worker_num_samples)
                 worker_models[a].load_state_dict(model_sum)
+            elif consensus == 'laplacian':
+                model_sum = laplacian_consensus(children, worker_models,
+                                                worker_num_samples, device,
+                                                rounds, radius, d)
+                agg_model = worker_models[a].get()
+                agg_model.load_state_dict(model_sum)
+                worker_models[a] = agg_model.send(nodes[a])
+            else:
+                raise Exception
 
     assert len(aggregators) == 1
     master = get_model_weights(worker_models[aggregators[0]].get(),
