@@ -5,6 +5,7 @@ from train import fog_train as train, test
 import os
 import pickle as pkl
 import syft as sy
+import sys
 import torch
 from torchvision import datasets, transforms
 
@@ -23,15 +24,21 @@ for non_iid in range(1, 5):
     ckpt_path = '../ckpts'
     dataset = 'mnist'
     clf_type = 'svm'
-    paradigm = 'fog_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_laplace_{}_{}'.format(
+    paradigm = 'fog_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_laplace_{}_{}_{}'.format(
         non_iid,
         args.num_workers,
         args.lr,
         args.batch_size,
         args.rounds,
         args.radius,
+        args.d2d
     )
     model_name = '{}_{}_{}'.format(dataset, clf_type, paradigm)
+    file_ = '../logs/{}.log'.format(model_name)
+    print("Logging: ", file_)
+    log_file = open(file_, 'w')
+    std_out = sys.stdout
+    sys.stdout = log_file
     print('+'*80)
     print(model_name)
     print('+'*80)
@@ -73,7 +80,7 @@ for non_iid in range(1, 5):
     for epoch in range(1, args.epochs + 1):
         train(args, model, fog_graph, workers, X_trains, y_trains,
               device, epoch, 'hinge', 'laplacian',
-              args.rounds, args.radius, args.d)
+              args.rounds, args.radius, args.d2d)
         acc = test(args, model, device, test_loader, best, epoch, 'hinge')
         y_ax.append(acc)
         x_ax.append(epoch)
@@ -97,3 +104,6 @@ for non_iid in range(1, 5):
     plot_file = '../plots/{}.png'
     plt.savefig(plot_file.format(model_name))
     print('Saved: ', plot_file)
+
+    log_file.close()
+    sys.stdout = std_out

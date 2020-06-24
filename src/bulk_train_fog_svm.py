@@ -5,6 +5,7 @@ from train import fog_train as train, test
 import os
 import pickle as pkl
 import syft as sy
+import sys
 import torch
 from torchvision import datasets, transforms
 
@@ -30,6 +31,11 @@ for non_iid in range(1, 5):
         args.batch_size
     )
     model_name = '{}_{}_{}'.format(dataset, clf_type, paradigm)
+    file_ = '../logs/{}.log'.format(model_name)
+    print("Logging: ", file_)
+    log_file = open(file_, 'w')
+    std_out = sys.stdout
+    sys.stdout = log_file
     print('+'*80)
     print(model_name)
     print('+'*80)
@@ -94,3 +100,6 @@ for non_iid in range(1, 5):
     plot_file = '../plots/{}.png'.format(model_name)
     plt.savefig(plot_file)
     print('Saved: ', plot_file)
+
+    log_file.close()
+    sys.stdout = std_out

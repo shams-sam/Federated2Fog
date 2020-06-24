@@ -1,8 +1,9 @@
 from collections import OrderedDict
 from multi_class_hinge_loss import multiClassHingeLoss
-from networkx import laplacian_matrix
+from networkx import laplacian_matrix, is_connected
 from networkx.generators.geometric import random_geometric_graph
 import numpy as np
+from random import random
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
@@ -40,6 +41,14 @@ def averaging_consensus(cluster, models, weights):
     return model_sum
 
 
+def get_connected_graph(num_nodes, radius):
+    graph = random_geometric_graph(num_nodes, radius)
+    while not is_connected(graph):
+        graph = random_geometric_graph(num_nodes, radius)
+
+    return graph
+
+
 def laplacian_average(models, V, num_nodes, rounds):
     model = OrderedDict()
     idx = np.random.randint(0, num_nodes)
@@ -54,9 +63,11 @@ def laplacian_average(models, V, num_nodes, rounds):
 
 
 def laplacian_consensus(cluster, models, weights, device,
-                        rounds=50, radius=2, d=1/15):
+                        rounds=50, radius=0.5):
     num_nodes = len(cluster)
-    graph = random_geometric_graph(num_nodes, radius)
+    graph = get_connected_graph(num_nodes, radius)
+    max_deg = max(dict(graph.degree()).values())
+    d = 1/(2*max_deg)
     L = laplacian_matrix(graph).toarray()
     V = torch.Tensor(np.eye(num_nodes) - d*L).to(device)
     with torch.no_grad():
@@ -65,6 +76,10 @@ def laplacian_consensus(cluster, models, weights, device,
         model_sum = laplacian_average(weighted_models, V, num_nodes, rounds)
 
     return model_sum
+
+
+def flip(p):
+    return True if random() < p else False
 
 
 def get_dataloader(data, targets, batchsize, shuffle=True):
@@ -76,7 +91,7 @@ def get_dataloader(data, targets, batchsize, shuffle=True):
 
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
               device, epoch, loss_fn='nll', consensus='averaging',
-              rounds=50, radius=2, d=1/15):
+              rounds=50, radius=0.5, d2d=0.7):
     # fog learning with model averaging
 
     if loss_fn == 'nll':
@@ -132,14 +147,14 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
             for child in children:
                 worker_models[child].move(nodes[a])
 
-            if consensus == 'averaging':
+            if consensus == 'averaging' or flip(1-d2d):
                 model_sum = averaging_consensus(children, worker_models,
                                                 worker_num_samples)
                 worker_models[a].load_state_dict(model_sum)
             elif consensus == 'laplacian':
                 model_sum = laplacian_consensus(children, worker_models,
                                                 worker_num_samples, device,
-                                                rounds, radius, d)
+                                                rounds, radius)
                 agg_model = worker_models[a].get()
                 agg_model.load_state_dict(model_sum)
                 worker_models[a] = agg_model.send(nodes[a])

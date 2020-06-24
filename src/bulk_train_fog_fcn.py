@@ -5,6 +5,7 @@ from train import fog_train as train, test
 import os
 import pickle as pkl
 import syft as sy
+import sys
 import torch
 from torchvision import datasets, transforms
 
@@ -30,11 +31,16 @@ for non_iid in range(1, 5):
         args.batch_size
     )
     model_name = '{}_{}_{}'.format(dataset, clf_type, paradigm)
+    file_ = '../logs/{}.log'.format(model_name)
+    print("Logging: ", file_)
+    log_file = open(file_, 'w')
+    std_out = sys.stdout
+    sys.stdout = log_file
     print('+'*80)
     print(model_name)
     print('+'*80)
     
-    init_path = os.path.join(ckpt_path, 'mnist_fcn_fl.init')
+    init_path = '../init/mnist_fcn.init'
     best_path = os.path.join(ckpt_path, model_name + '.best')
     stop_path = os.path.join(ckpt_path, model_name + '.stop')
 
@@ -52,8 +58,8 @@ for non_iid in range(1, 5):
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
     X_trains, y_trains = pkl.load(
-        open('../ckpts/data_non_iid_{}_stratify_True_uniform_True.pkl'.format(
-            non_iid), 'rb'))
+        open('../ckpts/data_non_iid_{}_num_workers_{}_stratify_True_uniform_True.pkl'.format(
+            non_iid, args.num_workers), 'rb'))
 
     print(fog_graph)
 
@@ -61,12 +67,8 @@ for non_iid in range(1, 5):
 
     # Fire the engines
     model = FCN().to(device)
-    if args.load_init:
-        model.load_state_dict(torch.load(init_path))
-        print('Load init: {}'.format(init_path))
-    elif args.save_init:
-        torch.save(model.state_dict(), init_path)
-        print('Save init: {}'.format(init_path))
+    model.load_state_dict(torch.load(init_path))
+    print('Load init: {}'.format(init_path))
 
     best = 0
 
@@ -98,3 +100,6 @@ for non_iid in range(1, 5):
     plot_file = '../plots/{}.png'
     plt.savefig(plot_file.format(model_name))
     print('Saved: ', plot_file)
+
+    log_file.close()
+    sys.stdout = std_out
