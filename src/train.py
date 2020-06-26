@@ -63,11 +63,11 @@ def laplacian_average(models, V, num_nodes, rounds):
 
 
 def laplacian_consensus(cluster, models, weights, device,
-                        rounds=50, radius=0.5):
+                        rounds, radius):
     num_nodes = len(cluster)
     graph = get_connected_graph(num_nodes, radius)
     max_deg = max(dict(graph.degree()).values())
-    d = 1/(2*max_deg)
+    d = 1/(8*max_deg)
     L = laplacian_matrix(graph).toarray()
     V = torch.Tensor(np.eye(num_nodes) - d*L).to(device)
     with torch.no_grad():
@@ -90,8 +90,8 @@ def get_dataloader(data, targets, batchsize, shuffle=True):
 
 
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
-              device, epoch, loss_fn='nll', consensus='averaging',
-              rounds=50, radius=0.5, d2d=0.7):
+              device, epoch, loss_fn, consensus,
+              rounds, radius, d2d):
     # fog learning with model averaging
 
     if loss_fn == 'nll':
@@ -301,4 +301,4 @@ def test(args, model, device, test_loader, best, epoch=0, loss_fn='nll'):
                   test_loss, correct, len(test_loader.dataset),
                   100.*accuracy, 100.*best))
 
-    return accuracy
+    return accuracy, test_loss
