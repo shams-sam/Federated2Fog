@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from multi_class_hinge_loss import multiClassHingeLoss
 from networkx import laplacian_matrix, is_connected
 from networkx.generators.geometric import random_geometric_graph
@@ -67,7 +67,7 @@ def laplacian_consensus(cluster, models, weights, device,
     num_nodes = len(cluster)
     graph = get_connected_graph(num_nodes, radius)
     max_deg = max(dict(graph.degree()).values())
-    d = 1/(8*max_deg)
+    d = 1/(16*max_deg)
     L = laplacian_matrix(graph).toarray()
     V = torch.Tensor(np.eye(num_nodes) - d*L).to(device)
     with torch.no_grad():
@@ -80,6 +80,18 @@ def laplacian_consensus(cluster, models, weights, device,
 
 def flip(p):
     return True if random() < p else False
+
+
+def weight_gradient(w1, w2, lr):
+    return torch.norm((w1.flatten()-w2.flatten())/lr).item()
+
+
+def model_gradient(model1, model2, lr):
+    grads = defaultdict(list)
+    for key, val in model1.items():
+        grads[key] = weight_gradient(model1[key], model2[key], lr)
+
+    return grads
 
 
 def get_dataloader(data, targets, batchsize, shuffle=True):
@@ -164,14 +176,18 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
     assert len(aggregators) == 1
     master = get_model_weights(worker_models[aggregators[0]].get(),
                                1/args.num_train)
+
+    grad = model_gradient(model.state_dict(), master, args.lr)
     model.load_state_dict(master)
 
     if epoch % args.log_interval == 0:
         loss = np.array([_ for dump, _ in worker_losses.items()])
-        print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f}'.format(
+        print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f} \tGrad: {}'.format(
             epoch,
-            loss.mean(), loss.std()
+            loss.mean(), loss.std(), dict(grad).values()
         ))
+
+    return grad
 
 
 def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
