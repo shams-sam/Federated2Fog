@@ -15,8 +15,8 @@ class Arguments():
             shuffle_workers=False,
             batch_size=False,
             test_batch_size=300,
-            epochs=50,
-            lr=0.006,
+            epochs=25,
+            lr=0.01,
             no_cuda=False,
             seed=1,
             log_interval=1,
@@ -25,9 +25,10 @@ class Arguments():
             uniform_data=True,
             shuffle_data=True,
             non_iid=1,
-            rounds=1,
+            rounds=50,
             radius=0.2,
             d2d=1.0,
+            factor=16
     ):
         # data config
         self.num_train = num_train
@@ -63,3 +64,4 @@ class Arguments():
         self.rounds = rounds
         self.radius = radius
         self.d2d = d2d
+        self.factor = factor

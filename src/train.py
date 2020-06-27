@@ -63,11 +63,11 @@ def laplacian_average(models, V, num_nodes, rounds):
 
 
 def laplacian_consensus(cluster, models, weights, device,
-                        rounds, radius):
+                        rounds, radius, factor):
     num_nodes = len(cluster)
     graph = get_connected_graph(num_nodes, radius)
     max_deg = max(dict(graph.degree()).values())
-    d = 1/(16*max_deg)
+    d = 1/(factor*max_deg)
     L = laplacian_matrix(graph).toarray()
     V = torch.Tensor(np.eye(num_nodes) - d*L).to(device)
     with torch.no_grad():
@@ -103,7 +103,7 @@ def get_dataloader(data, targets, batchsize, shuffle=True):
 
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
               device, epoch, loss_fn, consensus,
-              rounds, radius, d2d):
+              rounds, radius, d2d, factor=10):
     # fog learning with model averaging
 
     if loss_fn == 'nll':
@@ -166,7 +166,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
             elif consensus == 'laplacian':
                 model_sum = laplacian_consensus(children, worker_models,
                                                 worker_num_samples, device,
-                                                rounds, radius)
+                                                rounds, radius, factor)
                 agg_model = worker_models[a].get()
                 agg_model.load_state_dict(model_sum)
                 worker_models[a] = agg_model.send(nodes[a])
@@ -254,14 +254,18 @@ def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
         worker_models[agg].load_state_dict(model_sum)
 
     master = get_model_weights(worker_models[agg].get())
+
+    grad = model_gradient(model.state_dict(), master, args.lr)
     model.load_state_dict(master)
 
     if epoch % args.log_interval == 0:
         loss = np.array([_ for dump, _ in worker_losses.items()])
-        print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f}'.format(
+        print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f} \tGrad: {}'.format(
             epoch,
-            loss.mean(), loss.std()
+            loss.mean(), loss.std(), dict(grad).values()
         ))
+
+    return grad
 
 
 def fl_train_with_fl(args, model, device, train_loader, optimizer, epoch):

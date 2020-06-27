@@ -24,14 +24,15 @@ for non_iid in range(1, 2):
     ckpt_path = '../ckpts'
     dataset = 'mnist'
     clf_type = 'svm'
-    paradigm = 'fog_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_laplace_{}_{}_{}'.format(
+    paradigm = 'fog_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_laplace_rounds_{}_radius_{}_d2d_{}_factor_{}'.format(
         non_iid,
         args.num_workers,
         args.lr,
         args.batch_size,
         args.rounds,
         args.radius,
-        args.d2d
+        args.d2d,
+        args.factor
     )
     model_name = '{}_{}_{}'.format(dataset, clf_type, paradigm)
     file_ = '../logs/{}.log'.format(model_name)
@@ -78,14 +79,16 @@ for non_iid in range(1, 2):
     x_ax = []
     y_ax = []
     l_test = []
+    grad_tr = []
     for epoch in range(1, args.epochs + 1):
-        train(args, model, fog_graph, workers, X_trains, y_trains,
-              device, epoch, 'hinge', 'laplacian',
-              args.rounds, args.radius, args.d2d)
+        grad = train(args, model, fog_graph, workers, X_trains, y_trains,
+                     device, epoch, 'hinge', 'laplacian',
+                     args.rounds, args.radius, args.d2d, args.factor)
         acc, loss = test(args, model, device, test_loader, best, epoch, 'hinge')
         y_ax.append(acc)
         x_ax.append(epoch)
         l_test.append(loss)
+        grad_tr.append(grad)
 
         if args.save_model and acc > best:
             best = acc
@@ -98,7 +101,7 @@ for non_iid in range(1, 2):
         print('Model stop: {}'.format(stop_path))
 
     hist_file = '../history/history_{}.pkl'
-    pkl.dump((x_ax, y_ax, l_test), open(hist_file.format(model_name), 'wb'))
+    pkl.dump((x_ax, y_ax, l_test, grad_tr), open(hist_file.format(model_name), 'wb'))
     print('Saved: ', hist_file)
 
     import matplotlib.pyplot as plt
