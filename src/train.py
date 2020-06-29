@@ -102,7 +102,8 @@ def weight_gradient(w1, w2, lr):
 def model_gradient(model1, model2, lr):
     grads = defaultdict(list)
     for key, val in model1.items():
-        grads[key] = weight_gradient(model1[key], model2[key], lr)
+        grads[key.split('.')[-1]] = weight_gradient(
+            model1[key], model2[key], lr)
 
     return grads
 
@@ -135,6 +136,21 @@ def get_alpha(num_nodes, eps, a, alpha_store, dynamic=False):
     return alpha_store
 
 
+def estimate_true_gradient(norm_F_prev, omega):
+    return 1/omega*norm_F_prev
+
+
+def get_alpha_closed_form(args, grad, phi, N_prev, L, omega):
+    eta = args.lr
+    mu = args.decay
+    delta = args.delta
+    D = args.num_train
+    alpha = (D**2) * mu * (mu-delta*eta)*(grad**2)/(
+        (eta**4)*phi*(omega**2)*N_prev*L)
+
+    return alpha
+
+
 def get_dataloader(data, targets, batchsize, shuffle=True):
     dataset = TensorDataset(data, targets)
 
@@ -142,10 +158,14 @@ def get_dataloader(data, targets, batchsize, shuffle=True):
                       shuffle=shuffle, num_workers=1)
 
 
+def get_num_params(model):
+    return sum([_.flatten().size()[0] for _ in model.parameters()])
+
+
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
               device, epoch, loss_fn, consensus,
               rounds, radius, d2d, factor=10,
-              var_theta=False, alpha_store={}):
+              alpha_store={}, prev_grad=0):
     # fog learning with model averaging
 
     if loss_fn == 'nll':
@@ -176,7 +196,8 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
         node_model = worker_models[w].get()
         worker_optims[w] = optim.SGD(
             params=node_model.parameters(), lr=args.lr,
-            weight_decay=args.decay if loss_fn == 'hinge' else 0)
+            weight_decay=args.decay if loss_fn == 'hinge' else 0,
+            nesterov=args.nesterov, momentum=args.momentum)
         data = worker_data[w].get()
         target = worker_targets[w].get()
         dataloader = get_dataloader(data, target, args.batch_size)
@@ -195,6 +216,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
     num_div = []
     for l in range(1, len(args.num_clusters)+1):
         aggregators = [_ for _ in nodes.keys() if 'L{}'.format(l) in _]
+        N = len(aggregators)
         cluster_rounds = []
         cluster_div = []
         for a in aggregators:
@@ -216,7 +238,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                 eps = get_cluster_eps(children, worker_models, nodes, fog_graph)
                 cluster_div.append(eps)
 
-                if var_theta:
+                if args.var_theta:
                     Z = V - (1/num_nodes_in_cluster)
                     eig, dump = np.linalg.eig(Z)
                     lamda = eig.max()
@@ -225,14 +247,26 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                     else:
                         alpha = args.alpha
                         if not alpha:
-                            alpha_store = get_alpha(
-                                num_nodes_in_cluster,
-                                eps, a, alpha_store, args.dynamic_alpha)
-                            alpha = alpha_store[a]
+                            true_grad = estimate_true_gradient(
+                                prev_grad, args.omega)
+                            print('True grad: {:.6f}'.format(true_grad))
+                            if args.dynamic_alpha and true_grad:
+                                phi = sum(args.num_clusters)
+                                L = len(args.num_clusters)+1
+                                num_params = get_num_params(model)
+                                alpha = get_alpha_closed_form(
+                                    args, prev_grad, phi, N, L, num_params)
+                                print('sig: {:.6f} phi: {} L: {} num_params: {}'.format(
+                                    alpha, phi, L, num_params))
+                            else:
+                                alpha_store = get_alpha(
+                                    num_nodes_in_cluster,
+                                    eps, a, alpha_store, args.dynamic_alpha)
+                                alpha = alpha_store[a]
                         rounds = (np.log2(alpha)-2*np.log2(
                                 (num_nodes_in_cluster**2)*eps
                         ))/(2*np.log2(lamda))
-                        print('{:.6f} {} {:.6f} {:.6f} {} {}'.format(
+                        print('Rounds: {:.6f} Agg: {} Div: {:.6f} rho: {:.6f} sig: {} n_cluster_nodes:{}'.format(
                             rounds, a, eps, lamda,
                             alpha, num_nodes_in_cluster))
                         try:
@@ -242,11 +276,9 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                         if rounds > 50 or rounds < 1:
                             rounds = args.rounds
                     cluster_rounds.append(rounds)
-                    print('{:.6f} {} {:.6f} {:.6f} {} {}'.format(
+                    print('Rounds: {:.6f} Agg: {} Div: {:.6f} rho: {:.6f} sig: {} n_cluster_nodes:{}'.format(
                         rounds, a, eps, lamda,
                         alpha, num_nodes_in_cluster))
-                else:
-                    print(rounds, a, eps)
                 model_sum = laplacian_consensus(children, worker_models,
                                                 worker_num_samples,
                                                 V.to(device), rounds)

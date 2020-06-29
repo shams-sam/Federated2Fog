@@ -39,24 +39,21 @@ print('X_test: {}'.format(X_test.shape))
 print('y_test: {}'.format(y_test.shape))
 
 
-for non_iid in range(1, 5):
-    X_trains, y_trains = get_distributed_data(X_train, y_train,
-                                              args.num_workers,
-                                              stratify=args.stratify,
-                                              uniform=args.uniform_data,
-                                              shuffle=args.shuffle_data,
-                                              non_iid=non_iid)
+X_trains, y_trains = get_distributed_data(X_train, y_train, args.num_workers,
+                                          stratify=args.stratify,
+                                          uniform=args.uniform_data,
+                                          shuffle=args.shuffle_data,
+                                          non_iid=args.non_iid)
 
-    for _ in y_trains:
-        print(np.bincount(_))
+print([np.bincount(_) for _ in y_trains])
 
-    name = ['data',
-            'non_iid', str(non_iid),
-            'num_workers', str(args.num_workers),
-            'stratify', str(args.stratify),
-            'uniform', str(args.uniform_data)
-    ]
+name = ['data',
+        'iid',
+        'num_workers', str(args.num_workers),
+        'stratify', str(args.stratify),
+        'uniform', str(args.uniform_data)
+]
 
-    filename = '../ckpts/' + '_'.join(name) + '.pkl'
-    print('Saving: {}'.format(filename))
-    pkl.dump((X_trains, y_trains), open(filename, 'wb'))
+filename = '../ckpts/' + '_'.join(name) + '.pkl'
+print('Saving: {}'.format(filename))
+pkl.dump((X_trains, y_trains), open(filename, 'wb'))
