@@ -32,6 +32,16 @@ for data, target in test_loader:
     X_test = data
     y_test = target
 
+
+def repeat_data(data, repeat=args.repeat):
+    rep = [data for _ in range(repeat)]
+    rep = torch.cat(rep, dim=0)
+
+    return rep
+
+
+X_train, y_train = repeat_data(X_train), repeat_data(y_train)
+
 print('X_train: {}'.format(X_train.shape))
 print('y_train: {}'.format(y_train.shape))
 
@@ -54,7 +64,8 @@ for non_iid in range(1, 5):
             'non_iid', str(non_iid),
             'num_workers', str(args.num_workers),
             'stratify', str(args.stratify),
-            'uniform', str(args.uniform_data)
+            'uniform', str(args.uniform_data),
+            'repeat', str(args.repeat),
     ]
 
     filename = '../ckpts/' + '_'.join(name) + '.pkl'

@@ -1,177 +1,41 @@
-from collections import OrderedDict, defaultdict
+from consensus import averaging_consensus, consensus_matrix, \
+    estimate_true_gradient, laplacian_consensus, \
+    get_alpha, get_alpha_closed_form, get_cluster_eps, get_true_cluster_eps
+from model_op import add_model_weights, get_model_weights, \
+    get_num_params, model_gradient
 from multi_class_hinge_loss import multiClassHingeLoss
-from networkx import laplacian_matrix, is_connected
-from networkx.generators.geometric import random_geometric_graph
-from networkx.generators.random_graphs import erdos_renyi_graph
 import numpy as np
-from random import random
+from random import shuffle
+from terminaltables import AsciiTable
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader
-
-
-def get_model_weights(model, scaling_factor=1):
-
-    if scaling_factor == 1:
-        return model.state_dict()
-
-    else:
-        weights = model.state_dict()
-        for key, val in weights.items():
-            weights[key] = val*scaling_factor
-        return weights
-
-
-def add_model_weights(weights1, weights2):
-
-    for key, val in weights2.items():
-        weights1[key] += val
-
-    return weights1
-
-
-def averaging_consensus(cluster, models, weights):
-    with torch.no_grad():
-        weighted_models = [get_model_weights(models[_], weights[_])
-                           for _ in cluster]
-        model_sum = weighted_models[0]
-        for m in weighted_models[1:]:
-            model_sum = add_model_weights(model_sum, m)
-
-    return model_sum
-
-
-def get_connected_graph(num_nodes, param, topology='rgg'):
-    if topology == 'rgg':
-        generator = random_geometric_graph
-    elif topology == 'er':
-        generator = erdos_renyi_graph
-    graph = generator(num_nodes, param)
-    while not is_connected(graph):
-        graph = generator(num_nodes, param)
-
-    return graph
-
-
-def laplacian_average(models, V, num_nodes, rounds):
-    model = OrderedDict()
-    idx = np.random.randint(0, num_nodes)
-    for key, val in models[0].items():
-        size = val.size()
-        initial = torch.stack([_[key] for _ in models])
-        final = torch.matmul(torch.matrix_power(V, rounds),
-                             initial.reshape(num_nodes, -1))*num_nodes
-        model[key] = final[idx].reshape(size)
-
-    return model
-
-
-def consensus_matrix(num_nodes, radius, factor, topology):
-    graph = get_connected_graph(num_nodes, radius, topology)
-    max_deg = max(dict(graph.degree()).values())
-    d = 1/(factor*max_deg)
-    L = laplacian_matrix(graph).toarray()
-    V = torch.Tensor(np.eye(num_nodes) - d*L)
-
-    return V
-
-
-# when consensus is done using d2d
-# this gives closed form expression of such communication
-def laplacian_consensus(cluster, models, weights, V, rounds):
-    num_nodes = len(cluster)
-    with torch.no_grad():
-        weighted_models = [get_model_weights(models[_].get(), weights[_])
-                           for _ in cluster]
-        model_sum = laplacian_average(weighted_models, V, num_nodes, rounds)
-
-    return model_sum
-
-
-def flip(p):
-    return True if random() < p else False
-
-
-def weight_gradient(w1, w2, lr):
-    return torch.norm((w1.flatten()-w2.flatten())/lr).item()
-
-
-# for plotting gradient of global model under fogL
-# ideally should go to zero similar to a FL
-def model_gradient(model1, model2, lr):
-    grads = defaultdict(list)
-    for key, val in model1.items():
-        grads[key.split('.')[-1]] = weight_gradient(
-            model1[key], model2[key], lr)
-
-    return grads
-
-
-def get_cluster_eps(cluster, models, nodes, fog_graph, param='weight', normalize=False):
-    cluster_norms = []
-    for _ in cluster:
-        model = models[_].get()
-        weight = [val for _, val in model.state_dict().items()
-                  if param in _][0]
-        num_childs = 1
-        if _ in fog_graph:
-            num_childs = len(fog_graph[_])
-        norm = torch.norm(weight.flatten()).item()
-        if normalize:
-            norm /= num_childs
-        cluster_norms.append(norm)
-        models[_] = model.copy().send(nodes[_])
-    cluster_norms = np.array(cluster_norms)
-    cluster_norms = cluster_norms
-    eps = cluster_norms.max()-cluster_norms.min()
-
-    return eps
-
-
-def get_alpha(num_nodes, eps, a, alpha_store, dynamic=False):
-    if a not in alpha_store or dynamic:
-        alpha_store[a] = 0.0001*(num_nodes**4)*(eps**2)
-
-    return alpha_store
-
-
-def estimate_true_gradient(norm_F_prev, omega):
-    return 1/omega*norm_F_prev
-
-
-def get_alpha_closed_form(args, grad, phi, N_prev, L, omega):
-    eta = args.lr
-    mu = args.decay
-    delta = args.delta
-    D = args.num_train
-    alpha = (D**2) * mu * (mu-delta*eta)*(grad**2)/(
-        (eta**4)*phi*(omega**2)*N_prev*L)
-
-    return alpha
-
-
-def get_dataloader(data, targets, batchsize, shuffle=True):
-    dataset = TensorDataset(data, targets)
-
-    return DataLoader(dataset, batch_size=batchsize,
-                      shuffle=shuffle, num_workers=1)
-
-
-def get_num_params(model):
-    return sum([_.flatten().size()[0] for _ in model.parameters()])
+from utils import flip, get_dataloader
 
 
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
               device, epoch, loss_fn, consensus,
               rounds, radius, d2d, factor=10,
-              alpha_store={}, prev_grad=0):
+              alpha_store={}, prev_grad=0, shuffle_worker_data=True):
     # fog learning with model averaging
-
     if loss_fn == 'nll':
         loss_fn_ = F.nll_loss
     elif loss_fn == 'hinge':
         loss_fn_ = multiClassHingeLoss()
+
+    log = []
+    log_head = []
+    if args.var_theta:
+        if args.true_eps:
+            log_head.append('est')
+        log_head += ['div', 'true_grad']
+        if args.dynamic_alpha:
+            log_head += ['delta', 'D', 'mu', 'delta',
+                         'eta', 'grad', 'omega', 'N',
+                         'L', 'sig(c)', 'phi']
+        log_head += ['rounds', 'agg', 'rho', 'sig', 'cls_n']
+        log_head.append('rounded')
+    log.append(log_head)
 
     model.train()
 
@@ -184,6 +48,10 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
 
     # send data, model to workers
     # setup optimizer for each worker
+    if shuffle_worker_data:
+        data = list(zip(X_trains, y_trains))
+        shuffle(data)
+        X_trains, y_trains = zip(*data)
 
     workers = [_ for _ in nodes.keys() if 'L0' in _]
     for w, x, y in zip(workers, X_trains, y_trains):
@@ -195,9 +63,9 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
         worker_models[w] = model.copy().send(nodes[w])
         node_model = worker_models[w].get()
         worker_optims[w] = optim.SGD(
-            params=node_model.parameters(), lr=args.lr,
-            weight_decay=args.decay if loss_fn == 'hinge' else 0,
-            nesterov=args.nesterov, momentum=args.momentum)
+            params=node_model.parameters(),
+            lr=args.lr*(1-args.lr/10)**epoch if args.nesterov else args.lr,
+            weight_decay=args.decay if loss_fn == 'hinge' else 0,)
         data = worker_data[w].get()
         target = worker_targets[w].get()
         dataloader = get_dataloader(data, target, args.batch_size)
@@ -214,12 +82,15 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
 
     num_rounds = []
     num_div = []
+    var_radius = type(radius) == list
     for l in range(1, len(args.num_clusters)+1):
+
         aggregators = [_ for _ in nodes.keys() if 'L{}'.format(l) in _]
         N = len(aggregators)
         cluster_rounds = []
         cluster_div = []
         for a in aggregators:
+            agg_log = []
 
             worker_models[a] = model.copy().send(nodes[a])
             worker_num_samples[a] = 1
@@ -234,8 +105,17 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                 worker_models[a].load_state_dict(model_sum)
             elif consensus == 'laplacian':
                 num_nodes_in_cluster = len(children)
-                V = consensus_matrix(num_nodes_in_cluster, radius, factor, args.topology)
+                V = consensus_matrix(num_nodes_in_cluster,
+                                     radius if not var_radius else radius[l-1],
+                                     factor, args.topology)
                 eps = get_cluster_eps(children, worker_models, nodes, fog_graph)
+                if args.true_eps:
+                    est_eps = eps
+                    agg_log.append(est_eps)
+                    eps = get_true_cluster_eps(
+                        children, worker_models, nodes, fog_graph)
+                    print(eps, est_eps)
+                agg_log.append(eps)
                 cluster_div.append(eps)
 
                 if args.var_theta:
@@ -245,40 +125,38 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                     if lamda == 0:
                         rounds = args.rounds
                     else:
-                        alpha = args.alpha
-                        if not alpha:
-                            true_grad = estimate_true_gradient(
-                                prev_grad, args.omega)
-                            print('True grad: {:.6f}'.format(true_grad))
-                            if args.dynamic_alpha and true_grad:
-                                phi = sum(args.num_clusters)
-                                L = len(args.num_clusters)+1
-                                num_params = get_num_params(model)
-                                alpha = get_alpha_closed_form(
-                                    args, prev_grad, phi, N, L, num_params)
-                                print('sig: {:.6f} phi: {} L: {} num_params: {}'.format(
-                                    alpha, phi, L, num_params))
-                            else:
-                                alpha_store = get_alpha(
-                                    num_nodes_in_cluster,
-                                    eps, a, alpha_store, args.dynamic_alpha)
-                                alpha = alpha_store[a]
+                        true_grad = estimate_true_gradient(
+                            prev_grad, args.omega)
+                        agg_log.append(true_grad)
+                        if args.dynamic_alpha and true_grad:
+                            phi = sum(args.num_clusters)
+                            L = len(args.num_clusters)+1
+                            num_params = get_num_params(model)
+                            alpha, alph_log = get_alpha_closed_form(
+                                args, prev_grad, phi, N, L, num_params)
+                            agg_log += alph_log
+                            agg_log += [alpha, phi]
+                        else:
+                            alpha_store = get_alpha(
+                                num_nodes_in_cluster,
+                                eps, a, alpha_store,
+                                args.alpha, args.dynamic_alpha)
+                            alpha = alpha_store[a]
                         rounds = (np.log2(alpha)-2*np.log2(
                                 (num_nodes_in_cluster**2)*eps
                         ))/(2*np.log2(lamda))
-                        print('Rounds: {:.6f} Agg: {} Div: {:.6f} rho: {:.6f} sig: {} n_cluster_nodes:{}'.format(
-                            rounds, a, eps, lamda,
-                            alpha, num_nodes_in_cluster))
+                        agg_log += [rounds, a, lamda,
+                                    alpha, num_nodes_in_cluster]
                         try:
                             rounds = int(np.ceil(rounds))
                         except TypeError:
+                            rounds = 50
+                        if rounds > 50:
+                            rounds = 50
+                        elif rounds < 1:
                             rounds = 1
-                        if rounds > 50 or rounds < 1:
-                            rounds = args.rounds
                     cluster_rounds.append(rounds)
-                    print('Rounds: {:.6f} Agg: {} Div: {:.6f} rho: {:.6f} sig: {} n_cluster_nodes:{}'.format(
-                        rounds, a, eps, lamda,
-                        alpha, num_nodes_in_cluster))
+                    agg_log.append(rounds)
                 model_sum = laplacian_consensus(children, worker_models,
                                                 worker_num_samples,
                                                 V.to(device), rounds)
@@ -287,9 +165,14 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                 worker_models[a] = agg_model.send(nodes[a])
             else:
                 raise Exception
+            print(agg_log)
+            log.append(agg_log)
+
         num_rounds.append(cluster_rounds)
         num_div.append(cluster_div)
 
+    table = AsciiTable(log)
+    print(table.table)
     assert len(aggregators) == 1
     master = get_model_weights(worker_models[aggregators[0]].get(),
                                1/args.num_train)

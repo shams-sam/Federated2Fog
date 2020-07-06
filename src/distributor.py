@@ -1,4 +1,7 @@
 from collections import defaultdict
+from networkx import is_connected
+from networkx.generators.geometric import random_geometric_graph
+from networkx.generators.random_graphs import erdos_renyi_graph
 import numpy as np
 import random
 from sklearn.model_selection import train_test_split
@@ -168,3 +171,15 @@ def get_fog_graph(hook, num_workers, num_clusters,
             agg_map[clustr_ids[id_]] = worker_ids[indices[id_]: indices[id_+1]]
 
     return agg_map, workers
+
+
+def get_connected_graph(num_nodes, param, topology='rgg'):
+    if topology == 'rgg':
+        generator = random_geometric_graph
+    elif topology == 'er':
+        generator = erdos_renyi_graph
+    graph = generator(num_nodes, param)
+    while not is_connected(graph):
+        graph = generator(num_nodes, param)
+
+    return graph

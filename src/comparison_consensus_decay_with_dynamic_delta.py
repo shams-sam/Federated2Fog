@@ -25,12 +25,12 @@ clf = 'svm'
 # num_layers = 4
 
 lr = 0.001
-b = 120
+b = 32
 n = 500
 radius = 0.7
 d2d = 1.0
-non_iids = [10]
-epochs = 25
+non_iids = [1]
+epochs = 50
 factor = 2
 alpha = False
 rounds = 2
@@ -38,16 +38,18 @@ num_layers = 4
 dyn = True
 laplace = True
 theta = True
-delta = 0.00000001
-omega = 10
-bkp = False
+delta = 0.00909091
+omega = 1.5
+eps_mul = 1.1
+epochs = 20
+
 
 fig_div_all = plt.figure(figsize=(20, 12))
 fig_div_avg = plt.figure(figsize=(20, 12))
 fig_rounds_all = plt.figure(figsize=(20, 12))
 fig_rounds_avg = plt.figure(figsize=(20, 12))
 
-title = ['', 'a', 'b', 'c', 'd']
+title = ['', '', 'a', 'b', 'c', 'd']
 for non_iid in non_iids:
     name = 'mnist_{}_fog_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}'
     if laplace:
@@ -55,11 +57,9 @@ for non_iid in non_iids:
     if theta:
         name += '_alpha_{}'
     if dyn:
-        name += '_dyn_{}_delta_{:.8f}_omega_{}'
-    if bkp:
-        name += '_bkp'
+        name += '_dyn_{}_delta_{:.8f}_omega_{}_eps_mul_{}_epochs_{}'
     name = name.format(
-        clf, non_iid, n, lr, b, rounds, radius, d2d, factor, alpha, dyn, delta, omega
+        clf, non_iid, n, lr, b, rounds, radius, d2d, factor, alpha, dyn, delta, omega, eps_mul, epochs
     )
     files = '../history/history_{}.pkl'.format(name)
     x_ax, y_ax, l_test, grad_tr, rounds_tr, div_tr = pkl.load(open(files, 'rb'))

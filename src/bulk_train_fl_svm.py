@@ -21,14 +21,16 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if USE_CUDA else {}
 kwargs = {}
 
 for non_iid in range(1, 2):
+    non_iid = args.non_iid
     ckpt_path = '../ckpts'
     dataset = 'mnist'
     clf_type = 'svm'
-    paradigm = 'fl_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}'.format(
+    paradigm = 'fl_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_repeat_{}'.format(
         non_iid,
         args.num_workers,
         args.lr,
-        args.batch_size
+        args.batch_size,
+        args.repeat,
     )
     model_name = '{}_{}_{}'.format(dataset, clf_type, paradigm)
     file_ = '../logs/{}.log'.format(model_name)
@@ -57,9 +59,17 @@ for non_iid in range(1, 2):
                        ])),
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
+    if non_iid == 10:
+        data_file = '../ckpts/data_iid_num_workers_{}' \
+                    '_stratify_True_uniform_True_repeat_{}.pkl'.format(
+                        args.num_workers, args.repeat)
+    else:
+        data_file = '../ckpts/data_non_iid_{}_num_workers_{}' \
+                    '_stratify_True_uniform_True_repeat_{}.pkl'.format(
+                        non_iid, args.num_workers, args.repeat)
+    print('Loading data: {}'.format(data_file))
     X_trains, y_trains = pkl.load(
-        open('../ckpts/data_non_iid_{}_num_workers_{}_stratify_True_uniform_True.pkl'.format(
-            non_iid, args.num_workers), 'rb'))
+        open(data_file, 'rb'))
 
     print(fog_graph)
 

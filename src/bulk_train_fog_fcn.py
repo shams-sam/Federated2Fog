@@ -20,7 +20,7 @@ device = torch.device("cuda" if USE_CUDA else "cpu")
 kwargs = {'num_workers': 1, 'pin_memory': True} if USE_CUDA else {}
 kwargs = {}
 
-for non_iid in range(1, 5):
+for non_iid in range(1, 2):
     ckpt_path = '../ckpts'
     dataset = 'mnist'
     clf_type = 'fcn'
@@ -74,12 +74,14 @@ for non_iid in range(1, 5):
 
     x_ax = []
     y_ax = []
+    l_test = []
     for epoch in range(1, args.epochs + 1):
         train(args, model, fog_graph, workers, X_trains, y_trains,
-              device, epoch)
-        acc = test(args, model, device, test_loader, best, epoch)
+              device, epoch, loss_fn='averaging', rounds=0, radius=0, d2d=0)
+        acc, loss = test(args, model, device, test_loader, best, epoch)
         y_ax.append(acc)
         x_ax.append(epoch)
+        l_test.append(loss)
 
         if args.save_model and acc > best:
             best = acc
@@ -92,7 +94,7 @@ for non_iid in range(1, 5):
         print('Model stop: {}'.format(stop_path))
 
     hist_file = '../ckpts/history_{}.pkl'
-    pkl.dump((x_ax, y_ax), open(hist_file.format(model_name), 'wb'))
+    pkl.dump((x_ax, y_ax, l_test), open(hist_file.format(model_name), 'wb'))
     print('Saved: ', hist_file)
 
     import matplotlib.pyplot as plt
