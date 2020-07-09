@@ -134,3 +134,4 @@ ckpts/*
 history/*
 init/*
 plots/*
+*.pkl
