@@ -1,0 +1,127 @@
+1. Experiment to understand the effect of changing sigmas
+   Sigmas are calculated using eqn 26 inequality with different percentages of bound
+   Done on iid and non-iid dataset
+   with same or different connectivities on different layers 
+
+            num_train=60000,
+            num_test=10000,
+            # num_workers=200,
+            # num_clusters=[10, 5, 2, 1],
+            # num_workers=500,
+            # num_clusters=[100, 20, 4, 1],
+            num_workers=125,
+            num_clusters=[25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
+            uniform_clusters=True,
+            shuffle_workers=False,
+            batch_size=32,
+            test_batch_size=64,
+            epochs=50,
+            lr=0.01,
+            nesterov=False,
+            eta=10,
+            decay=1e-1,
+            no_cuda=False,
+            seed=1,
+            log_interval=1,
+            save_model=True,
+            stratify=True,
+            uniform_data=True,
+            shuffle_data=True,
+            non_iid=10,
+            repeat=1,
+            rounds=2,
+            radius=0.6,
+            use_same_graphs=True,
+            # graphs='topology_rgg_degree_2.0_rho_0.8750.pkl',
+            graphs=[
+                'topology_rgg_degree_2.0_rho_0.8750.pkl',
+                'topology_rgg_degree_3.2_rho_0.7500.pkl',
+                'topology_rgg_degree_4.0_rho_0.3750.pkl',
+            ],
+            # radius=[0.6, 0.7, 0.9],
+            d2d=1.0,
+            factor=2,
+            var_theta=True,
+            true_eps=True,
+            alpha=9e-1,
+            dynamic_alpha=False,
+            topology='rgg',
+            delta=2,
+            dynamic_delta=False,
+            omega=1.5,
+            F_0=6.250795,
+            F_optim=0.753122,
+            eps_multiplier=1.000001,
+            kappa=15,
+
+
+2. Check the effect of delta calculation
+   Settings:
+	- Alpha constant
+	- Alpha variable
+	- noniid
+	- iid
+	- same degree
+	- varying degree
+
+
+3. Comparison across different delta values.
+
+            num_train=60000,
+            num_test=10000,
+            # num_workers=200,
+            # num_clusters=[10, 5, 2, 1],
+            # num_workers=500,
+            # num_clusters=[100, 20, 4, 1],
+            num_workers=125,
+            num_clusters=[25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
+            uniform_clusters=True,
+            shuffle_workers=False,
+            batch_size=False,
+            test_batch_size=64,
+            epochs=50,
+            lr=0.01,
+            nesterov=False,
+            eta=10,
+            decay=1e-1,
+            no_cuda=False,
+            seed=1,
+            log_interval=1,
+            save_model=True,
+            stratify=True,
+            uniform_data=True,
+            shuffle_data=True,
+            non_iid=1,
+            repeat=1,
+            rounds=2,
+            radius=0.6,
+            use_same_graphs=True,
+            # graphs='topology_rgg_degree_3.2_rho_0.7500.pkl',
+            graphs=[
+                'topology_rgg_degree_2.0_rho_0.8750.pkl',
+                'topology_rgg_degree_3.2_rho_0.7500.pkl',
+                'topology_rgg_degree_4.0_rho_0.3750.pkl',
+            ],
+            # radius=[0.6, 0.7, 0.9],
+            d2d=1.0,
+            factor=4,
+            var_theta=True,
+            true_eps=False,
+            alpha=9e-1,
+            dynamic_alpha=True,
+            # 1 from 2.5 to 2
+            alpha_multiplier=[2e6, 1e12, 1e2],
+            topology='rgg',
+            delta_multiplier=0.99,
+            dynamic_delta=False,
+            omega=1.1,
+            F_0=0.0776,
+            F_optim=0,
+            eps_multiplier=1.0001,
+            kappa=1,

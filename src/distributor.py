@@ -173,13 +173,17 @@ def get_fog_graph(hook, num_workers, num_clusters,
     return agg_map, workers
 
 
-def get_connected_graph(num_nodes, param, topology='rgg'):
+def get_connected_graph(num_nodes, param, topology='rgg', retries=10):
     if topology == 'rgg':
         generator = random_geometric_graph
     elif topology == 'er':
         generator = erdos_renyi_graph
     graph = generator(num_nodes, param)
+    counter = 0
     while not is_connected(graph):
         graph = generator(num_nodes, param)
+        counter += 1
+        if counter > retries:
+            return False
 
     return graph

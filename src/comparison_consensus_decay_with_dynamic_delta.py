@@ -24,24 +24,24 @@ clf = 'svm'
 # rounds = 2
 # num_layers = 4
 
-lr = 0.001
+lr = 0.01
 b = 32
-n = 500
-radius = 0.7
+n = 125
+radius = 'graph_multi'
 d2d = 1.0
-non_iids = [1]
+non_iids = [10]
 epochs = 50
 factor = 2
-alpha = False
+alpha = 9e-1
 rounds = 2
-num_layers = 4
+num_layers = 3
 dyn = True
 laplace = True
 theta = True
-delta = 0.00909091
-omega = 1.5
-eps_mul = 1.1
-epochs = 20
+delta = 0.00050000
+omega = 1.4
+eps_mul = 1.0001
+kappa = [5, 15, 25, 35, 45]
 
 
 fig_div_all = plt.figure(figsize=(20, 12))
@@ -57,9 +57,9 @@ for non_iid in non_iids:
     if theta:
         name += '_alpha_{}'
     if dyn:
-        name += '_dyn_{}_delta_{:.8f}_omega_{}_eps_mul_{}_epochs_{}'
+        name += '_dyn_{}_delta_{:.8f}_omega_{}_eps_mul_{}_kappa_{}'
     name = name.format(
-        clf, non_iid, n, lr, b, rounds, radius, d2d, factor, alpha, dyn, delta, omega, eps_mul, epochs
+        clf, non_iid, n, lr, b, rounds, radius, d2d, factor, alpha, dyn, delta, omega, eps_mul, kappa
     )
     files = '../history/history_{}.pkl'.format(name)
     x_ax, y_ax, l_test, grad_tr, rounds_tr, div_tr = pkl.load(open(files, 'rb'))

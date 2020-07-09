@@ -17,13 +17,13 @@ class Arguments():
             # higher degree
             uniform_clusters=True,
             shuffle_workers=False,
-            batch_size=32,
+            batch_size=False,
             test_batch_size=64,
             epochs=50,
             lr=0.01,
             nesterov=False,
             eta=10,
-            decay=1e-2,
+            decay=1e-1,
             no_cuda=False,
             seed=1,
             log_interval=1,
@@ -35,21 +35,30 @@ class Arguments():
             repeat=1,
             rounds=2,
             radius=0.6,
+            use_same_graphs=True,
+            # graphs='topology_rgg_degree_3.2_rho_0.7500.pkl',
+            graphs=[
+                'topology_rgg_degree_2.0_rho_0.8750.pkl',
+                'topology_rgg_degree_3.2_rho_0.7500.pkl',
+                'topology_rgg_degree_4.0_rho_0.3750.pkl',
+            ],
             # radius=[0.6, 0.7, 0.9],
             d2d=1.0,
             factor=4,
             var_theta=True,
-            true_eps=True,
-            alpha=8e-1,
-            dynamic_alpha=False,
+            true_eps=False,
+            alpha=9e-1,
+            dynamic_alpha=True,
+            # 1 from 2.5 to 2
+            alpha_multiplier=[2e6, 1e12, 1e2],
             topology='rgg',
-            delta=2,
+            delta_multiplier=0.99,
             dynamic_delta=False,
-            omega=1.5,
-            F_0=6.250795,
-            F_optim=0.753122,
-            eps_multiplier=1.000001,
-            kappa=15,
+            omega=1.1,
+            F_0=0.0776,
+            F_optim=0,
+            eps_multiplier=1.0001,
+            kappa=1,
     ):
         # data config
         self.num_train = num_train*repeat
@@ -88,6 +97,8 @@ class Arguments():
         # laplacian consensus
         self.rounds = rounds
         self.radius = radius
+        self.use_same_graphs=use_same_graphs
+        self.graphs=graphs
         self.d2d = d2d
         self.factor = factor
         # Constant number of consensus rounds if False
@@ -100,10 +111,11 @@ class Arguments():
         self.alpha = alpha
         # sigma calculated for every epoch
         self.dynamic_alpha = dynamic_alpha
+        self.alpha_multiplier = alpha_multiplier
         # graph topology erdos renyi or rgg
         self.topology = topology
         # constant in equation 41
-        self.delta = self.decay/(delta/self.lr)
+        self.delta_multiplier = delta_multiplier
         self.dynamic_delta = dynamic_delta
         # multiplier for true gradient estimation
         self.omega = omega

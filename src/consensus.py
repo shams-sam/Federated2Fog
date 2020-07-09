@@ -3,6 +3,7 @@ from distributor import get_connected_graph
 from model_op import get_model_weights, add_model_weights
 from networkx import laplacian_matrix
 import numpy as np
+import pickle as pkl
 import torch
 from utils import nCr
 
@@ -32,7 +33,10 @@ def laplacian_average(models, V, num_nodes, rounds):
 
 
 def consensus_matrix(num_nodes, radius, factor, topology):
-    graph = get_connected_graph(num_nodes, radius, topology)
+    if type(radius) == str:
+        graph = pkl.load(open('../graphs/{}'.format(radius), 'rb'))
+    else:
+        graph = get_connected_graph(num_nodes, radius, topology)
     max_deg = max(dict(graph.degree()).values())
     d = 1/(factor*max_deg)
     L = laplacian_matrix(graph).toarray()
@@ -109,20 +113,28 @@ def estimate_true_gradient(norm_F_prev, omega):
     return 1/omega*norm_F_prev
 
 
-def get_alpha_closed_form(args, grad, phi, N_prev, L, omega):
+def get_alpha_closed_form(args, grad, phi, N_prev, L, omega, layer_num=False):
     eta = args.eta
     mu = args.decay
     if args.dynamic_delta:
         delta = estimate_delta(args)
     else:
-        delta = args.delta
-    print('Delta: ', delta)
+        delta = args.delta_multiplier*(mu/eta)
+
     D = args.num_train
-    log = [D, mu, delta, eta, grad, omega, N_prev, L]
     alpha = (D**2) * mu * (mu-delta*eta)*(grad**2)/(
         (eta**4)*phi*(omega**2)*N_prev*L)
+    if layer_num:
+        alpha = alpha*args.alpha_multiplier[layer_num-1]
+    log = [D, mu, delta, eta, grad, omega, N_prev, L, phi]
 
     return alpha, log
+
+
+def estimate_rounds(alpha, num_nodes_in_cluster, eps, lamda):
+    return (np.log2(alpha)-2*np.log2(
+        (num_nodes_in_cluster**2)*eps
+    ))/(2*np.log2(lamda))
 
 
 def estimate_delta(args):

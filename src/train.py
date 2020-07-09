@@ -1,5 +1,5 @@
 from consensus import averaging_consensus, consensus_matrix, \
-    estimate_true_gradient, laplacian_consensus, \
+    estimate_rounds, estimate_true_gradient, laplacian_consensus, \
     get_alpha, get_alpha_closed_form, get_cluster_eps, get_true_cluster_eps
 from model_op import add_model_weights, get_model_weights, \
     get_num_params, model_gradient
@@ -16,7 +16,7 @@ from utils import flip, get_dataloader
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
               device, epoch, loss_fn, consensus,
               rounds, radius, d2d, factor=10,
-              alpha_store={}, prev_grad=0, shuffle_worker_data=True):
+              alpha_store={}, prev_grad=0, shuffle_worker_data=False):
     # fog learning with model averaging
     if loss_fn == 'nll':
         loss_fn_ = F.nll_loss
@@ -30,9 +30,9 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
             log_head.append('est')
         log_head += ['div', 'true_grad']
         if args.dynamic_alpha:
-            log_head += ['delta', 'D', 'mu', 'delta',
+            log_head += ['D', 'mu', 'delta',
                          'eta', 'grad', 'omega', 'N',
-                         'L', 'sig(c)', 'phi']
+                         'L', 'phi']
         log_head += ['rounds', 'agg', 'rho', 'sig', 'cls_n']
         log_head.append('rounded')
     log.append(log_head)
@@ -114,7 +114,6 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                     agg_log.append(est_eps)
                     eps = get_true_cluster_eps(
                         children, worker_models, nodes, fog_graph)
-                    print(eps, est_eps)
                 agg_log.append(eps)
                 cluster_div.append(eps)
 
@@ -122,39 +121,41 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                     Z = V - (1/num_nodes_in_cluster)
                     eig, dump = np.linalg.eig(Z)
                     lamda = eig.max()
-                    if lamda == 0:
-                        rounds = args.rounds
-                    else:
-                        true_grad = estimate_true_gradient(
-                            prev_grad, args.omega)
-                        agg_log.append(true_grad)
-                        if args.dynamic_alpha and true_grad:
+                    true_grad = estimate_true_gradient(
+                        prev_grad, args.omega)
+                    agg_log.append(true_grad)
+                    if args.dynamic_alpha:
+                        if true_grad:
                             phi = sum(args.num_clusters)
                             L = len(args.num_clusters)+1
                             num_params = get_num_params(model)
-                            alpha, alph_log = get_alpha_closed_form(
-                                args, prev_grad, phi, N, L, num_params)
-                            agg_log += alph_log
-                            agg_log += [alpha, phi]
+                            alpha, alpha_log = get_alpha_closed_form(
+                                args, prev_grad, phi, N, L, num_params, l)
+                            agg_log += alpha_log
+                            rounds = estimate_rounds(
+                                alpha, num_nodes_in_cluster, eps, lamda)
                         else:
-                            alpha_store = get_alpha(
-                                num_nodes_in_cluster,
-                                eps, a, alpha_store,
-                                args.alpha, args.dynamic_alpha)
-                            alpha = alpha_store[a]
-                        rounds = (np.log2(alpha)-2*np.log2(
-                                (num_nodes_in_cluster**2)*eps
-                        ))/(2*np.log2(lamda))
-                        agg_log += [rounds, a, lamda,
-                                    alpha, num_nodes_in_cluster]
-                        try:
-                            rounds = int(np.ceil(rounds))
-                        except TypeError:
                             rounds = 50
-                        if rounds > 50:
-                            rounds = 50
-                        elif rounds < 1:
-                            rounds = 1
+                            agg_log += ['']*9
+                            alpha = 'N/A'
+                    else:
+                        alpha_store = get_alpha(
+                            num_nodes_in_cluster,
+                            eps, a, alpha_store,
+                            args.alpha, args.dynamic_alpha)
+                        alpha = alpha_store[a]
+                        rounds = estimate_rounds(alpha, num_nodes_in_cluster,
+                                                 eps, lamda)
+                    agg_log += [rounds, a, lamda,
+                                alpha, num_nodes_in_cluster]
+                    try:
+                        rounds = int(np.ceil(rounds))
+                    except TypeError:
+                        rounds = 50
+                    if rounds > 50:
+                        rounds = 50
+                    elif rounds < 1:
+                        rounds = 1
                     cluster_rounds.append(rounds)
                     agg_log.append(rounds)
                 model_sum = laplacian_consensus(children, worker_models,
@@ -165,7 +166,6 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                 worker_models[a] = agg_model.send(nodes[a])
             else:
                 raise Exception
-            print(agg_log)
             log.append(agg_log)
 
         num_rounds.append(cluster_rounds)
@@ -182,8 +182,8 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
 
     if epoch % args.log_interval == 0:
         loss = np.array([_ for dump, _ in worker_losses.items()])
-        print('Train Epoch: {} \tLoss: {:.6f} +- {:.6f} \tGrad: {}'.format(
-            epoch,
+        print('Train Epoch: {}({}) \tLoss: {:.6f} +- {:.6f} \tGrad: {}'.format(
+            epoch, len(dataloader),
             loss.mean(), loss.std(), dict(grad).values()
         ))
 

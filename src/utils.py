@@ -1,4 +1,6 @@
 from math import factorial as f
+import networkx as nx
+import numpy as np
 from random import random
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -7,7 +9,7 @@ def flip(p):
     return True if random() < p else False
 
 
-def get_dataloader(data, targets, batchsize, shuffle=True):
+def get_dataloader(data, targets, batchsize, shuffle=False):
     dataset = TensorDataset(data, targets)
 
     return DataLoader(dataset, batch_size=batchsize,
@@ -16,3 +18,38 @@ def get_dataloader(data, targets, batchsize, shuffle=True):
 
 def nCr(n, r):
     return f(n)//f(r)//f(n-r)
+
+
+def in_range(elem, upper, lower):
+    return (elem >= lower) and (elem <= upper)
+
+
+def get_spectral_radius(matrix):
+    eig, _ = np.linalg.eig(matrix)
+
+    return max(eig)
+
+
+def get_average_degree(graph):
+    return sum(dict(graph.degree()).values())/len(graph)
+
+
+def get_max_degree(graph):
+    return max(dict(graph.degree()).values())
+
+
+def get_laplacian(graph):
+    return nx.laplacian_matrix(graph).toarray()
+
+
+def get_rho(graph, num_nodes, factor):
+    max_d = get_max_degree(graph)
+    d = 1/(factor*max_d)
+    L = get_laplacian(graph)
+    V = np.eye(num_nodes) - d*L
+    Z = V-(1/num_nodes)
+    return get_spectral_radius(Z)
+
+
+def decimal_format(num, places=4):
+    return round(num, places)
