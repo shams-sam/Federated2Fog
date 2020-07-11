@@ -2,7 +2,9 @@ from math import factorial as f
 import networkx as nx
 import numpy as np
 from random import random
+import torch
 from torch.utils.data import TensorDataset, DataLoader
+from torchvision import datasets, transforms
 
 
 def flip(p):
@@ -14,6 +16,34 @@ def get_dataloader(data, targets, batchsize, shuffle=False):
 
     return DataLoader(dataset, batch_size=batchsize,
                       shuffle=shuffle, num_workers=1)
+
+
+def get_testloader(args):
+    kwargs = {}
+    if args.dataset == 'mnist':
+        return torch.utils.data.DataLoader(
+            datasets.MNIST('../data', train=False,
+                           transform=transforms.Compose([
+                               transforms.ToTensor(),
+                               transforms.Normalize((0.1307,), (0.3081,))
+                           ])),
+            batch_size=args.test_batch_size, shuffle=True, **kwargs)
+    elif args.dataset == 'cifar':
+        return torch.utils.data.DataLoader(
+            datasets.CIFAR10('../data', train=False,
+                             transform=transforms.Compose([
+                                 transforms.ToTensor(),
+                                 transforms.Normalize((0.5, 0.5, 0.5),
+                                                      (0.5, 0.5, 0.5))])),
+            batch_size=args.test_batch_size, shuffle=True, **kwargs)
+    elif args.dataset == 'fmnist':
+        return torch.utils.data.DataLoader(
+            datasets.FashionMNIST('../data', train=False,
+                                  transform=transforms.Compose([
+                                      transforms.ToTensor(),
+                                      transforms.Normalize((0.2861,),
+                                                           (0.3530,))])),
+            batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
 
 def nCr(n, r):

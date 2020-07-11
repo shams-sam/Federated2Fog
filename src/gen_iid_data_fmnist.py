@@ -6,23 +6,24 @@ import torch
 from torchvision import datasets, transforms
 
 
+dataset = 'fmnist'
 args = Arguments()
 
 kwargs = {}
 train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=True, download=True,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
+    datasets.FashionMNIST('../data', train=True, download=True,
+                          transform=transforms.Compose([
+                              transforms.ToTensor(),
+                              transforms.Normalize((0.2861,), (0.3530,))
                    ])),
-    batch_size=args.num_train, shuffle=False, **kwargs)
+    batch_size=args.num_trains[dataset], shuffle=False, **kwargs)
 
 test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data', train=False, transform=transforms.Compose([
+    datasets.FashionMNIST('../data', train=False, transform=transforms.Compose([
                        transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
+                       transforms.Normalize((0.2861,), (0.3530,))
                    ])),
-    batch_size=args.num_test, shuffle=True, **kwargs)
+    batch_size=args.num_tests[dataset], shuffle=True, **kwargs)
 
 for data, target in train_loader:
     X_train = data
@@ -53,12 +54,12 @@ X_trains, y_trains = get_distributed_data(X_train, y_train, args.num_workers,
                                           stratify=args.stratify,
                                           uniform=args.uniform_data,
                                           shuffle=args.shuffle_data,
-                                          non_iid=args.non_iid)
+                                          non_iid=10)
 
 for _ in y_trains:
     print(np.bincount(_))
 
-name = ['data',
+name = ['data', dataset,
         'iid',
         'num_workers', str(args.num_workers),
         'stratify', str(args.stratify),

@@ -54,9 +54,10 @@ def get_distributed_data(X_train, y_train, num_parts,
                          uniform=True, shuffle=True,
                          non_iid=10, num_classes=10):
     if shuffle:
-        perm = np.random.permutation(X_train.shape[0])
-        X_train = X_train[perm]
-        y_train = y_train[perm]
+        for _ in range(10):
+            perm = np.random.permutation(X_train.shape[0])
+            X_train = X_train[perm]
+            y_train = y_train[perm]
 
     X_trains = []
     y_trains = []

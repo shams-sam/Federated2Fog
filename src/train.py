@@ -1,6 +1,7 @@
 from consensus import averaging_consensus, consensus_matrix, \
     estimate_rounds, estimate_true_gradient, laplacian_consensus, \
-    get_alpha, get_alpha_closed_form, get_cluster_eps, get_true_cluster_eps
+    get_alpha, get_alpha_closed_form, get_alpha_using_psi, \
+    get_cluster_eps, get_true_cluster_eps
 from model_op import add_model_weights, get_model_weights, \
     get_num_params, model_gradient
 from multi_class_hinge_loss import multiClassHingeLoss
@@ -30,7 +31,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
             log_head.append('est')
         log_head += ['div', 'true_grad']
         if args.dynamic_alpha:
-            log_head += ['D', 'mu', 'delta',
+            log_head += ['D', 'mu', args.delta_or_psi,
                          'eta', 'grad', 'omega', 'N',
                          'L', 'phi']
         log_head += ['rounds', 'agg', 'rho', 'sig', 'cls_n']
@@ -108,12 +109,14 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                 V = consensus_matrix(num_nodes_in_cluster,
                                      radius if not var_radius else radius[l-1],
                                      factor, args.topology)
-                eps = get_cluster_eps(children, worker_models, nodes, fog_graph)
+                eps = get_cluster_eps(children, worker_models,
+                                      worker_num_samples, nodes, fog_graph)
                 if args.true_eps:
                     est_eps = eps
                     agg_log.append(est_eps)
                     eps = get_true_cluster_eps(
-                        children, worker_models, nodes, fog_graph)
+                        children, worker_models,
+                        worker_num_samples, nodes, fog_graph)
                 agg_log.append(eps)
                 cluster_div.append(eps)
 
@@ -129,8 +132,12 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                             phi = sum(args.num_clusters)
                             L = len(args.num_clusters)+1
                             num_params = get_num_params(model)
-                            alpha, alpha_log = get_alpha_closed_form(
-                                args, prev_grad, phi, N, L, num_params, l)
+                            if args.delta_or_psi == 'delta':
+                                alpha, alpha_log = get_alpha_closed_form(
+                                    args, true_grad, phi, N, L, num_params, l)
+                            elif args.delta_or_psi == 'psi':
+                                alpha, alpha_log = get_alpha_using_psi(
+                                    args, phi, N, L, num_params, l)
                             agg_log += alpha_log
                             rounds = estimate_rounds(
                                 alpha, num_nodes_in_cluster, eps, lamda)

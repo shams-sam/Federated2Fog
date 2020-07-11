@@ -4,8 +4,7 @@ from math import ceil
 class Arguments():
     def __init__(
             self,
-            num_train=60000,
-            num_test=10000,
+            dataset='fmnist',
             # num_workers=200,
             # num_clusters=[10, 5, 2, 1],
             # num_workers=500,
@@ -19,7 +18,7 @@ class Arguments():
             shuffle_workers=False,
             batch_size=False,
             test_batch_size=64,
-            epochs=50,
+            epochs=25,
             lr=0.01,
             nesterov=False,
             eta=10,
@@ -31,7 +30,7 @@ class Arguments():
             stratify=True,
             uniform_data=True,
             shuffle_data=True,
-            non_iid=1,
+            non_iid=10,
             repeat=1,
             rounds=2,
             radius=0.6,
@@ -50,9 +49,11 @@ class Arguments():
             alpha=9e-1,
             dynamic_alpha=True,
             # 1 from 2.5 to 2
-            alpha_multiplier=[2e6, 1e12, 1e2],
+            alpha_multiplier=[1e7]*3,
             topology='rgg',
-            delta_multiplier=0.99,
+            delta_multiplier=0.8,
+            delta_or_psi = 'delta',
+            psi=1e-6,
             dynamic_delta=False,
             omega=1.1,
             F_0=0.0776,
@@ -61,8 +62,15 @@ class Arguments():
             kappa=1,
     ):
         # data config
-        self.num_train = num_train*repeat
-        self.num_test = num_test
+        self.dataset = dataset
+        self.num_trains = {'mnist': 60000, 'cifar': 50000, 'fmnist': 60000}
+        self.num_train = self.num_trains[self.dataset]*repeat
+        self.num_tests = {'mnist': 10000, 'cifar': 10000, 'fmnist': 10000}
+        self.num_test = self.num_tests[self.dataset]
+        self.input_sizes = {'mnist': 28*28, 'cifar': 3*32*32, 'fmnist': 28*28}
+        self.input_size = self.input_sizes[self.dataset]
+        self.output_sizes = {'mnist': 10, 'cifar': 10, 'fmnist': 10}
+        self.output_size = self.output_sizes[self.dataset]
         self.stratify = save_model
         self.uniform_data = uniform_data
         self.shuffle_data = shuffle_data
@@ -112,6 +120,8 @@ class Arguments():
         # sigma calculated for every epoch
         self.dynamic_alpha = dynamic_alpha
         self.alpha_multiplier = alpha_multiplier
+        self.delta_or_psi = delta_or_psi
+        self.psi = psi
         # graph topology erdos renyi or rgg
         self.topology = topology
         # constant in equation 41

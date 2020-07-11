@@ -57,13 +57,13 @@ def laplacian_consensus(cluster, models, weights, V, rounds):
     return model_sum
 
 
-def get_cluster_eps(cluster, models, nodes, fog_graph,
+def get_cluster_eps(cluster, models, weights, nodes, fog_graph,
                     param='weight', normalize=False):
     cluster_norms = []
     for _ in cluster:
         model = models[_].get()
-        weight = [val for _, val in model.state_dict().items()
-                  if param in _][0]
+        weight = [val for full_name, val in model.state_dict().items()
+                  if param in full_name][0]*weights[_]
         num_childs = 1
         if _ in fog_graph:
             num_childs = len(fog_graph[_])
@@ -79,7 +79,7 @@ def get_cluster_eps(cluster, models, nodes, fog_graph,
     return eps
 
 
-def get_true_cluster_eps(cluster, models, nodes, fog_graph,
+def get_true_cluster_eps(cluster, models, weights, nodes, fog_graph,
                          param='weight', normalize=False):
     tuple_norms = []
     num_nodes = len(cluster)
@@ -87,13 +87,11 @@ def get_true_cluster_eps(cluster, models, nodes, fog_graph,
         for j in range(i+1, num_nodes):
             node_i, node_j = cluster[i], cluster[j]
             m_i, m_j = models[node_i].get(), models[node_j].get()
-            w_i = [val for _, val in m_i.state_dict().items()
-                   if param in _][0]
-            w_j = [val for _, val in m_j.state_dict().items()
-                   if param in _][0]
-            tuple_norms.append(
-                torch.norm(
-                    w_i.flatten()-w_j.flatten()).item())
+            w_i = torch.cat([val.flatten() for _, val in m_i.state_dict().items()
+                             if param in _])*weights[node_i]
+            w_j = torch.cat([val.flatten() for _, val in m_j.state_dict().items()
+                             if param in _])*weights[node_j]
+            tuple_norms.append(torch.norm(w_i - w_j).item())
             models[node_i] = m_i.copy().send(nodes[node_i])
             models[node_j] = m_j.copy().send(nodes[node_j])
 
@@ -127,6 +125,17 @@ def get_alpha_closed_form(args, grad, phi, N_prev, L, omega, layer_num=False):
     if layer_num:
         alpha = alpha*args.alpha_multiplier[layer_num-1]
     log = [D, mu, delta, eta, grad, omega, N_prev, L, phi]
+
+    return alpha, log
+
+
+def get_alpha_using_psi(args, phi, N_prev, L, omega, layer_num=False):
+    D = args.num_train
+    psi = args.psi
+    alpha = (D**2) * psi/(phi * (omega**2) * N_prev * L)
+    if layer_num:
+        alpha = alpha*args.alpha_multiplier[layer_num-1]
+    log = [D, '', psi, '', '', omega, N_prev, L, phi]
 
     return alpha, log
 

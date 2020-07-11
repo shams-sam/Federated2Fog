@@ -25,63 +25,27 @@ matplotlib.rcParams['lines.markersize'] = 8
 # factor = 16
 # num_layer = 4
 
-# clf = 'svm'
-# lr = 0.01
-# b = 480
-# n = 125
-# radius = 1.0
-# d2d = 1.0
-# non_iids = [1]
-# alpha = 9e-1
-# delta_multipliers = [0.99, 0.95, 0.9, 0.8, 1e-05]
-# epochs = 25
-# factor = 4
-# rounds = 2
-# radius = 'graph_multi'
-# d2d = 1.0
-# num_layer = 3
-# dyn = True
-# omega = 1.1
-
 dataset = 'fmnist'
-clf = 'svm'
+clf = 'fcn'
 lr = 0.01
-b = 480
+b = 64
 n = 125
 radius = 1.0
 d2d = 1.0
-non_iids = [10]
+non_iids = [10] # 1 or 10
+exponent = 2
 alpha = 9e-1
-delta_multipliers = [0.99, 0.95, 0.9, 0.8]
+# psis = [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+psis = [1e4, 1e3, 1e2, 1e1, 1e0, 1e-1]
 epochs = 25
-factor = 4
+factor = 2
 rounds = 2
 radius = 'graph_multi'
+#radius = 'graph_single'
 d2d = 1.0
 num_layer = 3
 dyn = True
 omega = 1.1
-
-# clf = 'svm'
-# lr = 0.01
-# b = 480
-# n = 125
-# radius = 1.0
-# d2d = 1.0
-# non_iids = [10]
-# alpha = 9e-1
-# delta_multipliers = [0.99, 0.95, 0.9, 0.8]
-# epochs = 25
-# factor = 4
-# rounds = 2
-# radius = 'graph_multi'
-# d2d = 1.0
-# num_layer = 3
-# dyn = True
-# omega = 1.1
-decay = 0.1
-
-decay = '_decay_{}'.format(decay) if decay else ''
 
 rows = 3
 cols = 3
@@ -95,9 +59,9 @@ for line in ['accuracy', 'loss', 'rounds'] + \
         plt_num = plt_start + idx
         ax = fig.add_subplot(plt_num)
         idx += 1
-        files = '../history/history_{}_{}_fog_uniform_non_iid_{}_num_workers_{}_lr_{}{}_batch_{}_laplace_rounds_{}_radius_{}_d2d_{}_factor_{}_alpha_{}_dyn_{}_delta_multiplier_{}_omega_{}.pkl'
-        file_ = '../history/history_{}_{}_fl_uniform_non_iid_{}_num_workers_{}_lr_{}{}_batch_{}_repeat_1.pkl'.format(
-            dataset, clf, non_iid, n, lr, decay, b
+        files = '../history/history_{}_{}_fog_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_laplace_rounds_{}_radius_{}_d2d_{}_factor_{}_alpha_{}_dyn_{}_psi_{}.pkl'
+        file_ = '../history/history_{}_{}_fl_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_repeat_1.pkl'.format(
+            dataset, clf, non_iid, n, lr, b
         )
 
         colors = ['r.:', 'm.:', 'b.:', 'g.:', 'c.:', 'k.:', 'k']
@@ -105,29 +69,30 @@ for line in ['accuracy', 'loss', 'rounds'] + \
         x_ax, y_ax, l_test, grad_tr = pkl.load(open(file_, 'rb'))
         x_ax, y_ax, l_test = x_ax[:epochs], y_ax[:epochs], l_test[:epochs]
         if line=='accuracy':
-            ax.plot(x_ax, y_ax, colors[-1], label='EUT fogL')
-        else:
-            ax.plot(x_ax, l_test, colors[-1], label='EUT fogL')
+            ax.plot(x_ax, np.array(y_ax), colors[-1], label='EUT fogL')
+        elif line=='loss':
+            ax.plot(x_ax, np.array(l_test)*(10**exponent), colors[-1], label='EUT fogL')
 
-        for i in range(len(delta_multipliers)):
+        for i in range(len(psis)):
             x_ax, y_ax, l_test, grad_tr, rounds_tr, _ = pkl.load(
-                open(files.format(dataset, clf, non_iid, n, lr, decay,
+                open(files.format(dataset, clf, non_iid, n, lr,
                                   b, rounds, radius, d2d, factor, alpha,
-                                  dyn, delta_multipliers[i], omega), 'rb'))
+                                  dyn, psis[i]), 'rb'))
             x_ax, y_ax, l_test = x_ax[:epochs], y_ax[:epochs], l_test[:epochs]
             if line == 'accuracy':
-                ax.plot(x_ax, y_ax, colors[i],
-                        label='$\delta$ = {:0.0f}% of $\mu \over \eta$'.format(delta_multipliers[i]*100))
+                ax.plot(x_ax, np.array(y_ax), colors[i],
+                        label='psi = ' + str(psis[i]))
+                ax.set_yticks([0.75, 0.80])
             elif line == 'loss':
-                ax.plot(x_ax, l_test, colors[i],
-                        label='$\delta$ = {:0.0f}% of $\mu \over \eta$'.format(delta_multipliers[i]*100))
+                ax.plot(x_ax, np.array(l_test)*(10**exponent), colors[i],
+                        label='$\psi$ = {0:.1g}'.format(psis[i]))
             elif line == 'rounds':
                 avg_rounds = []
                 for r in rounds_tr:
                     r = np.array([_ for layer in r for _ in layer])
                     avg_rounds.append(r.sum()/len(r))
                 ax.plot(x_ax, avg_rounds[:epochs], colors[i],
-                        label="$\delta'$ = {:0.0f}%".format(delta_multipliers[i]*100))
+                        label='$\psi$ = {:0.1g}'.format(psis[i]))
             elif 'layer' in  line:
                 l_num = int(line.split('_')[-1])
                 layer_rounds = [[] for _ in range(num_layer)]
@@ -137,7 +102,7 @@ for line in ['accuracy', 'loss', 'rounds'] + \
 
                 ax.plot(x_ax, layer_rounds[l_num][:epochs],
                         colors[i], label=line)
-
+                        
         ax.set_xlabel('$k$')
         if line == 'layer_0':
             line = r'$\overline{\theta^{(k)}_{\mathcal{L}^3}}$'
@@ -147,17 +112,19 @@ for line in ['accuracy', 'loss', 'rounds'] + \
             line = r'$\overline{\theta^{(k)}_{\mathcal{L}^1}}$'
         elif line == 'rounds':
             line = r'$\overline{\theta^{(k)}}$'
+        elif line == 'loss' and exponent:
+            line = r'loss ($\times 10^{-2}$)'
         ax.set_ylabel(line)
         ax.grid(True)
         # ax.set_xlim(left=0, right=50)
         ax.set_title('({})'.format(title[idx]), y=-0.3)
-        if idx == 4:
-            ax.legend(loc='upper right', ncol=5, bbox_to_anchor=(-2.3, 1.1, 3.0, .125), mode='expand', frameon=False)
+        if idx == 3:
+            ax.legend(loc='upper right', ncol=7, bbox_to_anchor=(-1.35, 1.1, 3.7, .125), mode='expand', frameon=False)
 file_name = '../plots/{}_{}_fog_uniform_non_iid_{}_num_workers_{}_lr_{}' \
             '_batch_{}_laplace_alpha_{}_radius_{}_d2d_{}_factor_{}' \
-            '_deltas_{}_omega_{}'.format(
+            '_psis_{}'.format(
                 dataset, clf, non_iid, n, lr, b, alpha, radius, d2d, factor,
-                '_'.join(list(map(str, delta_multipliers))), omega)
+                '_'.join(list(map(str, psis))))
 print('Saving: ', file_name)
 fig.subplots_adjust(wspace=0.3, hspace=0.35)
 for format_ in ['png', 'eps']:

@@ -7,7 +7,7 @@ import pickle as pkl
 import syft as sy
 import sys
 import torch
-from torchvision import datasets, transforms
+from utils import get_testloader
 
 
 # Setups
@@ -23,12 +23,13 @@ kwargs = {}
 for non_iid in range(1, 2):
     non_iid = args.non_iid
     ckpt_path = '../ckpts'
-    dataset = 'mnist'
+    dataset = args.dataset
     clf_type = 'svm'
-    paradigm = 'fl_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_repeat_{}'.format(
+    paradigm = 'fl_uniform_non_iid_{}_num_workers_{}_lr_{}_decay_{}_batch_{}_repeat_{}'.format(
         non_iid,
         args.num_workers,
         args.lr,
+        args.decay,
         args.batch_size,
         args.repeat,
     )
@@ -42,7 +43,7 @@ for non_iid in range(1, 2):
     print(model_name)
     print('+'*80)
     
-    init_path = '../init/mnist_svm.init'
+    init_path = '../init/{}_svm.init'.format(dataset)
     best_path = os.path.join(ckpt_path, model_name + '.best')
     stop_path = os.path.join(ckpt_path, model_name + '.stop')
 
@@ -52,21 +53,16 @@ for non_iid in range(1, 2):
                                        args.shuffle_workers,
                                        args.uniform_clusters, fog=False)
 
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=False, transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=args.test_batch_size, shuffle=True, **kwargs)
+    test_loader = get_testloader(args)
 
     if non_iid == 10:
-        data_file = '../ckpts/data_iid_num_workers_{}' \
+        data_file = '../ckpts/data_{}_iid_num_workers_{}' \
                     '_stratify_True_uniform_True_repeat_{}.pkl'.format(
-                        args.num_workers, args.repeat)
+                        dataset, args.num_workers, args.repeat)
     else:
-        data_file = '../ckpts/data_non_iid_{}_num_workers_{}' \
+        data_file = '../ckpts/data_{}_non_iid_{}_num_workers_{}' \
                     '_stratify_True_uniform_True_repeat_{}.pkl'.format(
-                        non_iid, args.num_workers, args.repeat)
+                        dataset, non_iid, args.num_workers, args.repeat)
     print('Loading data: {}'.format(data_file))
     X_trains, y_trains = pkl.load(
         open(data_file, 'rb'))
@@ -76,7 +72,7 @@ for non_iid in range(1, 2):
     best = 0
 
     # Fire the engines
-    model = SVM().to(device)
+    model = SVM(args.input_size, args.output_size).to(device)
     model.load_state_dict(torch.load(init_path))
     print('Load init: {}'.format(init_path))
 

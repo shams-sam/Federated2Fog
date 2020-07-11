@@ -3,12 +3,12 @@ import torch.nn.functional as F
 
 
 class FCN(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size=784, output_size=10):
         super(FCN, self).__init__()
-        self.fc1 = nn.Linear(784, 128)
-        self.fc2 = nn.Linear(128, 10)
+        self.input_size = input_size
+        self.output_size = output_size
+        self.fc1 = nn.Linear(self.input_size, self.output_size)
 
     def forward(self, x):
-        x = F.relu(self.fc1(x.reshape(-1, 784)))
-        x = self.fc2(x)
+        x = self.fc1(x.reshape(-1, self.input_size))
         return F.log_softmax(x, dim=1)

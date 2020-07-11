@@ -1,5 +1,5 @@
 from arguments import Arguments
-from svm import SVM
+from fcn import FCN
 from distributor import get_fog_graph
 from train import fog_train as train, test
 import os
@@ -7,7 +7,7 @@ import pickle as pkl
 import syft as sy
 import sys
 import torch
-from torchvision import datasets, transforms
+from utils import get_testloader
 
 
 # Setups
@@ -23,8 +23,8 @@ kwargs = {}
 for non_iid in range(1, 2):
     non_iid = args.non_iid
     ckpt_path = '../ckpts'
-    dataset = 'mnist'
-    clf_type = 'svm'
+    dataset = args.dataset
+    clf_type = 'fcn'
     paradigm = 'fog_uniform_non_iid_{}_num_workers' \
                '_{}_lr_{}_batch_{}_laplace_rounds_{}' \
                '_radius_{}_d2d_{}_factor_{}_alpha_{}'
@@ -32,9 +32,7 @@ for non_iid in range(1, 2):
     if args.use_same_graphs:
         args.radius = args.graphs
     if args.dynamic_alpha:
-        paradigm += '_dyn_{}_delta_multiplier_{}_omega_{}'
-    if args.dynamic_delta:
-        paradigm += '_eps_mul_{}_kappa_{}'
+        paradigm += '_dyn_{}_psi_{}'
 
     rad_name = args.radius
     if args.use_same_graphs:
@@ -47,8 +45,7 @@ for non_iid in range(1, 2):
         args.rounds, rad_name,
         args.d2d, args.factor,
         args.alpha, args.dynamic_alpha,
-        args.delta_multiplier, args.omega,
-        args.eps_multiplier, args.kappa
+        args.psi,
     )
     model_name = '{}_{}_{}'.format(dataset, clf_type, paradigm)
     file_ = '../logs/{}.log'.format(model_name)
@@ -60,7 +57,7 @@ for non_iid in range(1, 2):
     print(model_name)
     print('+'*80)
     
-    init_path = '../init/mnist_svm.init'
+    init_path = '../init/{}_{}.init'.format(dataset, clf_type)
     best_path = os.path.join(ckpt_path, model_name + '.best')
     stop_path = os.path.join(ckpt_path, model_name + '.stop')
 
@@ -70,21 +67,16 @@ for non_iid in range(1, 2):
                                        args.shuffle_workers,
                                        args.uniform_clusters)
 
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=False, transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=args.test_batch_size, shuffle=True, **kwargs)
+    test_loader = get_testloader(args)
 
     if non_iid == 10:
-        data_file = '../ckpts/data_iid_num_workers_{}' \
+        data_file = '../ckpts/data_{}_iid_num_workers_{}' \
                     '_stratify_True_uniform_True_repeat_{}.pkl'.format(
-                        args.num_workers, args.repeat)
+                        dataset, args.num_workers, args.repeat)
     else:
-        data_file = '../ckpts/data_non_iid_{}_num_workers_{}' \
+        data_file = '../ckpts/data_{}_non_iid_{}_num_workers_{}' \
                     '_stratify_True_uniform_True_repeat_{}.pkl'.format(
-                        non_iid, args.num_workers, args.repeat)
+                        dataset, non_iid, args.num_workers, args.repeat)
     print('Loading data: {}'.format(data_file))
     X_trains, y_trains = pkl.load(
         open(data_file, 'rb'))
@@ -94,8 +86,7 @@ for non_iid in range(1, 2):
     best = 0
 
     # Fire the engines
-    model = SVM().to(device)
-    num_params = model.state_dict
+    model = FCN(args.input_size, args.output_size).to(device)
     model.load_state_dict(torch.load(init_path))
     print('Load init: {}'.format(init_path))
 
@@ -108,7 +99,9 @@ for non_iid in range(1, 2):
     rounds_tr = []
     div_tr = []
     alpha_store = {}
-    grad = {'weight': 0}
+    # non_zero_grad for getting a true_grad in fog_train
+    # grad is not used in fcn case
+    grad = {'weight': 0.01}
     for epoch in range(1, args.epochs + 1):
         grad, rounds, div, alpha_store = train(
             args, model, fog_graph, workers, X_trains, y_trains, device, epoch,

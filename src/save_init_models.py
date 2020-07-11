@@ -1,28 +1,28 @@
-from cnn import CNN
+from arguments import Arguments
 from fcn import FCN
 from svm import SVM
 import torch
 
-INIT_CNN = False
-INIT_FCN = False
+INIT_FCN = True
 INIT_SVM = True
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-if INIT_CNN:
-    model = CNN().to(device)
-    init_path = '../init/mnist_cnn.init'
-    torch.save(model.state_dict(), init_path)
-    print('Save init: {}'.format(init_path))
+args = Arguments()
 
-if INIT_FCN:
-    model = FCN().to(device)
-    init_path = '../init/mnist_fcn.init'
-    torch.save(model.state_dict(), init_path)
-    print('Save init: {}'.format(init_path))
+for dataset in args.input_sizes:
+    if INIT_FCN:
+        model = FCN(args.input_sizes[dataset],
+                    args.output_sizes[dataset]).to(device)
+        print(model.input_size, model.output_size)
+        init_path = '../init/{}_fcn.init'.format(dataset)
+        torch.save(model.state_dict(), init_path)
+        print('Save init: {}'.format(init_path))
 
-if INIT_SVM:
-    model = SVM()
-    init_path = '../init/mnist_svm.init'
-    torch.save(model.state_dict(), init_path)
-    print('Save init: {}'.format(init_path))
+    if INIT_SVM:
+        model = SVM(args.input_sizes[dataset],
+                    args.output_sizes[dataset]).to(device)
+        print(model.n_feature, model.n_class)
+        init_path = '../init/{}_svm.init'.format(dataset)
+        torch.save(model.state_dict(), init_path)
+        print('Save init: {}'.format(init_path))
