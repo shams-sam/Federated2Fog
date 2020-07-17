@@ -12,26 +12,14 @@ matplotlib.rcParams['lines.markersize'] = 8
 dataset = 'fmnist'
 clf = 'svm'
 lr = 0.01
-b = 480 #96
-n = 125 #625
-radius = 0.6
-radius = 0.6 #'graph_multi'
+b = 96
+n = 625
+radius = 'graph_multi'
 d2d = 1.0
 non_iids = [1]
 consensus = [1, 2, 5, 15, 30]
 epochs = 25
 factor = 2
-
-# clf = 'svm'
-# lr = 0.003
-# b = 300
-# n = 200
-# radius = 0.2
-# d2d = 1.0
-# non_iids = [1]
-# consensus = [1, 2, 5, 15, 30]
-# epochs = 50
-# factor = 8
 
 fig = plt.figure(figsize=(30, 8))
 log_base = np.exp(1)

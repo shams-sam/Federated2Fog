@@ -16,8 +16,8 @@ epochs = 50
 dataset = 'fmnist'
 factor = 32
 non_iid = 1
-n = 125 #625
-b = 480 #96
+n = 625
+b = 96
 radius = 'graph_multi'
 
 idx = 1
@@ -26,15 +26,10 @@ for line in ['accuracy', 'loss']:
     for non_iid in [1]:
         ax = fig.add_subplot(120 + idx)
         idx += 1
-        # files = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_False_batch_{}_laplace_rounds_1_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, radius, factor)
-        # file_ = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_True_batch_{}_laplace_rounds_1_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, radius, factor)
-        # file_fl = '../history/history_{}_svm_fl_uniform_non_iid_1_num_workers_{}_lr_0.01_decay_0.1_batch_{}_repeat_1.pkl'.format(dataset, n, b)
-        # file_15 = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_False_batch_{}_laplace_rounds_15_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, radius, factor)
-
-        files = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_False_batch_{}_laplace_rounds_1_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, 0.6, factor)
-        file_ = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_True_batch_{}_laplace_rounds_1_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, 0.6, factor)
+        files = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_False_batch_{}_laplace_rounds_1_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, radius, factor)
+        file_ = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_True_batch_{}_laplace_rounds_1_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, radius, factor)
         file_fl = '../history/history_{}_svm_fl_uniform_non_iid_1_num_workers_{}_lr_0.01_decay_0.1_batch_{}_repeat_1.pkl'.format(dataset, n, b)
-        file_15 = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_False_batch_{}_laplace_rounds_15_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, 0.6, factor)
+        file_15 = '../history/history_{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_nest_False_batch_{}_laplace_rounds_15_radius_{}_d2d_1.0_factor_{}_repeat_1.pkl'.format(dataset, n, b, radius, factor)
 
         colors = ['r.:', 'k.:']
 

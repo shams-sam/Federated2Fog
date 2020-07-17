@@ -98,8 +98,12 @@ def get_distributed_data(X_train, y_train, num_parts,
             num_splits = len(node_list)
             if uniform:
                 split_size = X_cls.shape[0]//num_splits
-                crossover = [_*split_size
-                             for _ in range(num_splits)] + [X_cls.shape[0]]
+                crossover = np.array([_*split_size
+                                      for _ in range(num_splits+1)])
+                remaining = X_cls.shape[0] - crossover[-1]
+                for idx in range(remaining):
+                    crossover[idx:] += 1
+                assert crossover[-1] == X_cls.shape[0]
             else:
                 crossover = [0] + \
                     list(sorted(random.sample(

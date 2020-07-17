@@ -5,21 +5,14 @@ class Arguments():
     def __init__(
             self,
             dataset='fmnist',
-            # num_workers=200,
-            # num_clusters=[10, 5, 2, 1],
-            # num_workers=500,
-            # num_clusters=[100, 20, 4, 1],
-            num_workers=125,
-            num_clusters=[25, 5, 1],
-            # for more gap among consensus
-            # more workers
-            # higher degree
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
             test_batch_size=64,
             epochs=25,
-            lr=0.01,
+            lr=0.004,
             nesterov=False,
             eta=10,
             decay=1e-1,
@@ -30,30 +23,23 @@ class Arguments():
             stratify=True,
             uniform_data=True,
             shuffle_data=True,
-            non_iid=10,
+            non_iid=1,
             repeat=1,
             rounds=2,
             radius=0.6,
             use_same_graphs=True,
-            # graphs='topology_rgg_degree_3.2_rho_0.7500.pkl',
-            graphs=[
-                'topology_rgg_degree_2.0_rho_0.8750.pkl',
-                'topology_rgg_degree_3.2_rho_0.7500.pkl',
-                'topology_rgg_degree_4.0_rho_0.3750.pkl',
-            ],
-            # radius=[0.6, 0.7, 0.9],
+            graph='multi',
             d2d=1.0,
             factor=4,
             var_theta=True,
             true_eps=False,
             alpha=9e-1,
             dynamic_alpha=True,
-            # 1 from 2.5 to 2
-            alpha_multiplier=[1e7]*3,
+            alpha_multiplier=[1e4]*4,
+            delta_or_psi='psi',
+            psi=1e-1,
             topology='rgg',
-            delta_multiplier=0.8,
-            delta_or_psi = 'delta',
-            psi=1e-6,
+            delta_multiplier=0.99,
             dynamic_delta=False,
             omega=1.1,
             F_0=0.0776,
@@ -106,7 +92,15 @@ class Arguments():
         self.rounds = rounds
         self.radius = radius
         self.use_same_graphs=use_same_graphs
-        self.graphs=graphs
+        if graph == 'multi':
+            self.graphs = [
+                'topology_rgg_degree_2.0_rho_0.8750.pkl',
+                'topology_rgg_degree_2.0_rho_0.8750.pkl',
+                'topology_rgg_degree_3.2_rho_0.7500.pkl',
+                'topology_rgg_degree_4.0_rho_0.3750.pkl',
+            ][-len(num_clusters):]
+        else:
+            self.graphs='topology_rgg_degree_3.2_rho_0.7500.pkl'
         self.d2d = d2d
         self.factor = factor
         # Constant number of consensus rounds if False

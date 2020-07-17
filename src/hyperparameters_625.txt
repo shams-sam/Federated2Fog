@@ -3,15 +3,8 @@
 ++++ set decay param to -0.01 when nestrov = True
 
             dataset='fmnist',
-            # num_workers=200,
-            # num_clusters=[10, 5, 2, 1],
-            # num_workers=500,
-            # num_clusters=[100, 20, 4, 1],
-            num_workers=125,
-            num_clusters=[25, 5, 1],
-            # for more gap among consensus
-            # more workers
-            # higher degree
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
@@ -34,7 +27,6 @@
             radius=0.6,
             use_same_graphs=True,
             graph='multi',
-            # radius=[0.6, 0.7, 0.9],
             d2d=1.0,
             factor=32,
             var_theta=False,
@@ -56,22 +48,15 @@
 ++++ mnist set decay param to -0.1
 
             dataset='mnist',
-            # num_workers=200,
-            # num_clusters=[10, 5, 2, 1],
-            # num_workers=500,
-            # num_clusters=[100, 20, 4, 1],
-            num_workers=125,
-            num_clusters=[25, 5, 1],
-            # for more gap among consensus
-            # more workers
-            # higher degree
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
             test_batch_size=64,
-            epochs=50,
+            epochs=25,
             lr=0.01,
-            nesterov=False,
+            nesterov=True,
             eta=10,
             decay=1e-1,
             no_cuda=False,
@@ -87,7 +72,6 @@
             radius=0.6,
             use_same_graphs=True,
             graph='multi',
-            # radius=[0.6, 0.7, 0.9],
             d2d=1.0,
             factor=32,
             var_theta=False,
@@ -124,7 +108,7 @@
             shuffle_workers=False,
             batch_size=False,
             test_batch_size=64,
-            epochs=50,
+            epochs=25,
             lr=0.01,
             nesterov=False,
             eta=10,
@@ -165,20 +149,13 @@
 +++ fmnist svm non iid
 
             dataset='fmnist',
-            # num_workers=200,
-            # num_clusters=[10, 5, 2, 1],
-            # num_workers=500,
-            # num_clusters=[100, 20, 4, 1],
-            num_workers=125,
-            num_clusters=[25, 5, 1],
-            # for more gap among consensus
-            # more workers
-            # higher degree
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
             test_batch_size=64,
-            epochs=50,
+            epochs=25,
             lr=0.01,
             nesterov=False,
             eta=10,
@@ -192,11 +169,10 @@
             shuffle_data=True,
             non_iid=1,
             repeat=1,
-            rounds=1,
+            rounds=30,
             radius=0.6,
             use_same_graphs=True,
             graph='multi',
-            # radius=[0.6, 0.7, 0.9],
             d2d=1.0,
             factor=2,
             var_theta=False,
@@ -220,55 +196,12 @@
    Sigmas are calculated using eqn 26 inequality with different percentages of bound
    Done on iid and non-iid dataset
    with same or different connectivities on different layers 
-
             dataset='mnist',
-            num_workers=125,
-            num_clusters=[25, 5, 1],
-            uniform_clusters=True,
-            shuffle_workers=False,
-            batch_size=False,
-            test_batch_size=64,
-            epochs=25,
-            lr=0.01,
-            nesterov=False,
-            eta=10,
-            decay=1e-1,
-            no_cuda=False,
-            seed=1,
-            log_interval=1,
-            save_model=True,
-            stratify=True,
-            uniform_data=True,
-            shuffle_data=True,
-            non_iid=1,
-            repeat=1,
-            rounds=2,
-            radius=0.6,
-            use_same_graphs=True,
-            graph='multi',
-            d2d=1.0,
-            factor=2,
-            var_theta=True,
-            true_eps=True,
-            alpha=1e-2,
-            dynamic_alpha=False,
-            alpha_multiplier=False,
-            delta_or_psi = 'delta',
-            psi=1e-6,
-            topology='rgg',
-            delta_multiplier=0.99,
-            dynamic_delta=False,
-            omega=1.5,
-            F_0=6.250795,
-            F_optim=0.753122,
-            eps_multiplier=1.000001,
-            kappa=15,
-
-++++ fmnist for non iid and iid
-
-            dataset='fmnist',
-            num_workers=125,
-            num_clusters=[25, 5, 1],
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
@@ -294,7 +227,55 @@
             d2d=1.0,
             factor=2,
             var_theta=True,
-            true_eps=True,
+            true_eps=False,
+            alpha=1e-2,
+            dynamic_alpha=False,
+            alpha_multiplier=False,
+            delta_or_psi = 'delta',
+            psi=1e-6,
+            topology='rgg',
+            delta_multiplier=0.99,
+            dynamic_delta=False,
+            omega=1.5,
+            F_0=6.250795,
+            F_optim=0.753122,
+            eps_multiplier=1.000001,
+            kappa=15,
+
+++++ fmnist for non iid and iid
+
+            dataset='fmnist',
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
+            uniform_clusters=True,
+            shuffle_workers=False,
+            batch_size=False,
+            test_batch_size=64,
+            epochs=25,
+            lr=0.01,
+            nesterov=False,
+            eta=10,
+            decay=1e-1,
+            no_cuda=False,
+            seed=1,
+            log_interval=1,
+            save_model=True,
+            stratify=True,
+            uniform_data=True,
+            shuffle_data=True,
+            non_iid=1,
+            repeat=1,
+            rounds=2,
+            radius=0.6,
+            use_same_graphs=True,
+            graph='multi',
+            d2d=1.0,
+            factor=2,
+            var_theta=True,
+            true_eps=False,
             alpha=1e-2,
             dynamic_alpha=False,
             alpha_multiplier=False,
@@ -324,9 +305,12 @@
 
 ++++ mnist non iid 1
 
-            dataset='mnist',
-            num_workers=125,
-            num_clusters=[25, 5, 1],
+            dataset = 'mnist',
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
@@ -348,7 +332,7 @@
             rounds=2,
             radius=0.6,
             use_same_graphs=True,
-            graph='multi',
+            graph = 'multi',
             d2d=1.0,
             factor=4,
             var_theta=True,
@@ -356,9 +340,9 @@
             alpha=9e-1,
             dynamic_alpha=True,
             # 1 from 2.5 to 2
-            alpha_multiplier=[1e13]*3,
+            alpha_multiplier=[1e13]*4,
             topology='rgg',
-            delta_multiplier=0.8,
+            delta_multiplier=0.99,
             delta_or_psi = 'delta',
             psi=1e-6,
             dynamic_delta=False,
@@ -368,16 +352,12 @@
             eps_multiplier=1.0001,
             kappa=1,
 
+
 ++++ mnist iid 10
 
-            num_train=60000,
-            num_test=10000,
-            # num_workers=200,
-            # num_clusters=[10, 5, 2, 1],
-            # num_workers=500,
-            # num_clusters=[100, 20, 4, 1],
-            num_workers=125,
-            num_clusters=[25, 5, 1],
+            dataset='mnist',
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             # for more gap among consensus
             # more workers
             # higher degree
@@ -400,15 +380,9 @@
             non_iid=10,
             repeat=1,
             rounds=2,
-            radius=0.6,
+            radius=0,
             use_same_graphs=True,
-            # graphs='topology_rgg_degree_3.2_rho_0.7500.pkl',
-            graphs=[
-                'topology_rgg_degree_2.0_rho_0.8750.pkl',
-                'topology_rgg_degree_3.2_rho_0.7500.pkl',
-                'topology_rgg_degree_4.0_rho_0.3750.pkl',
-            ],
-            # radius=[0.6, 0.7, 0.9],
+            graph='multi',
             d2d=1.0,
             factor=4,
             var_theta=True,
@@ -416,9 +390,9 @@
             alpha=9e-1,
             dynamic_alpha=True,
             # 1 from 2.5 to 2
-            alpha_multiplier=[1e7]*3,
+            alpha_multiplier=[1e10]*4,
             topology='rgg',
-            delta_multiplier=0.8,
+            delta_multiplier=0.9,
             delta_or_psi = 'delta',
             psi=1e-6,
             dynamic_delta=False,
@@ -431,8 +405,11 @@
 ++++ fmnist non iid 1
 
             dataset='fmnist',
-            num_workers=125,
-            num_clusters=[25, 5, 1],
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
@@ -461,9 +438,10 @@
             true_eps=False,
             alpha=9e-1,
             dynamic_alpha=True,
-            alpha_multiplier=[1e12]*3,
+            # 1 from 2.5 to 2
+            alpha_multiplier=[1e11]*4,
             topology='rgg',
-            delta_multiplier=0.99,
+            delta_multiplier=0.8,
             delta_or_psi = 'delta',
             psi=1e-6,
             dynamic_delta=False,
@@ -476,12 +454,8 @@
 ++++ fmnist iid 10
 
             dataset='fmnist',
-            # num_workers=200,
-            # num_clusters=[10, 5, 2, 1],
-            # num_workers=500,
-            # num_clusters=[100, 20, 4, 1],
-            num_workers=125,
-            num_clusters=[25, 5, 1],
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             # for more gap among consensus
             # more workers
             # higher degree
@@ -515,9 +489,9 @@
             alpha=9e-1,
             dynamic_alpha=True,
             # 1 from 2.5 to 2
-            alpha_multiplier=[1e8]*3,
+            alpha_multiplier=[1e10]*4,
             topology='rgg',
-            delta_multiplier=0.99,
+            delta_multiplier=0.8,
             delta_or_psi = 'delta',
             psi=1e-6,
             dynamic_delta=False,
@@ -527,106 +501,16 @@
             eps_multiplier=1.0001,
             kappa=1,
 
-
 4. comparison across psi values
 
 ++++ iid after fixing the consensus bug
 
             dataset='mnist',
-            num_workers=125,
-            num_clusters=[25, 5, 1],
-            uniform_clusters=True,
-            shuffle_workers=False,
-            batch_size=False,
-            test_batch_size=64,
-            epochs=25,
-            lr=0.01,
-            nesterov=False,
-            eta=10,
-            decay=1e-1,
-            no_cuda=False,
-            seed=1,
-            log_interval=1,
-            save_model=True,
-            stratify=True,
-            uniform_data=True,
-            shuffle_data=True,
-            non_iid=10,
-            repeat=1,
-            rounds=2,
-            radius=0,
-            use_same_graphs=True,
-            graph='multi',
-            d2d=1.0,
-            factor=2,
-            var_theta=True,
-            true_eps=False,
-            alpha=9e-1,
-            dynamic_alpha=True,
-            # multiplier = 1 for factor 2 and iid 10 and psi expt
-            alpha_multiplier=[1e1, 1e1, 1e1],
-            delta_or_psi='psi',
-            psi=1e5,
-            topology='rgg',
-            delta_multiplier=0.99,
-            dynamic_delta=False,
-            omega=1.1,
-            F_0=0.0776,
-            F_optim=0,
-            eps_multiplier=1.0001,
-            kappa=1,
-
-++++ mnist non iid
-
-            dataset='mnist',
-            num_workers=125,
-            num_clusters=[25, 5, 1],
-            uniform_clusters=True,
-            shuffle_workers=False,
-            batch_size=False,
-            test_batch_size=64,
-            epochs=25,
-            lr=0.01,
-            nesterov=False,
-            eta=10,
-            decay=1e-1,
-            no_cuda=False,
-            seed=1,
-            log_interval=1,
-            save_model=True,
-            stratify=True,
-            uniform_data=True,
-            shuffle_data=True,
-            non_iid=1,
-            repeat=1,
-            rounds=2,
-            radius=0,
-            use_same_graphs=True,
-            graph='multi',
-            d2d=1.0,
-            factor=2,
-            var_theta=True,
-            true_eps=False,
-            alpha=9e-1,
-            dynamic_alpha=True,
-            # multiplier = 1 for factor 2 and iid 10 and psi expt
-            alpha_multiplier=[1e4, 1e4, 1e4],
-            delta_or_psi='psi',
-            psi=1e5,
-            topology='rgg',
-            delta_multiplier=0.99,
-            dynamic_delta=False,
-            omega=1.1,
-            F_0=0.0776,
-            F_optim=0,
-            eps_multiplier=1.0001,
-            kappa=1,
-
-++++ fmnist iid 10
-
-            dataset='fmnist',
-            num_workers=125,
-            num_clusters=[25, 5, 1],
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
@@ -656,9 +540,109 @@
             alpha=9e-1,
             dynamic_alpha=True,
             # multiplier = 1 for factor 2 and iid 10 and psi expt
-            alpha_multiplier=[1e1, 1e1, 1e1],
+            alpha_multiplier=[1e1]*4,
             delta_or_psi='psi',
-            psi=1e5,
+            psi=1e1,
+            topology='rgg',
+            delta_multiplier=0.99,
+            dynamic_delta=False,
+            omega=1.1,
+            F_0=0.0776,
+            F_optim=0,
+            eps_multiplier=1.0001,
+            kappa=1,
+
+
+++++ non iid 1 mnist
+
+            dataset='mnist',
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
+            uniform_clusters=True,
+            shuffle_workers=False,
+            batch_size=False,
+            test_batch_size=64,
+            epochs=25,
+            lr=0.01,
+            nesterov=False,
+            eta=10,
+            decay=1e-1,
+            no_cuda=False,
+            seed=1,
+            log_interval=1,
+            save_model=True,
+            stratify=True,
+            uniform_data=True,
+            shuffle_data=True,
+            non_iid=1,
+            repeat=1,
+            rounds=2,
+            radius=0.6,
+            use_same_graphs=True,
+            graph='multi',
+            d2d=1.0,
+            factor=2,
+            var_theta=True,
+            true_eps=False,
+            alpha=9e-1,
+            dynamic_alpha=True,
+            # multiplier = 1 for factor 2 and iid 10 and psi expt
+            alpha_multiplier=[1e4]*4,
+            delta_or_psi='psi',
+            psi=1e4,
+            topology='rgg',
+            delta_multiplier=0.99,
+            dynamic_delta=False,
+            omega=1.1,
+            F_0=0.0776,
+            F_optim=0,
+            eps_multiplier=1.0001,
+            kappa=1,
+
+
+++++ fmnist iid 10
+
+            dataset='fmnist',
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
+            # for more gap among consensus
+            # more workers
+            # higher degree
+            uniform_clusters=True,
+            shuffle_workers=False,
+            batch_size=False,
+            test_batch_size=64,
+            epochs=25,
+            lr=0.01,
+            nesterov=False,
+            eta=10,
+            decay=1e-1,
+            no_cuda=False,
+            seed=1,
+            log_interval=1,
+            save_model=True,
+            stratify=True,
+            uniform_data=True,
+            shuffle_data=True,
+            non_iid=10,
+            repeat=1,
+            rounds=2,
+            radius=0.6,
+            use_same_graphs=True,
+            graph='multi',
+            d2d=1.0,
+            factor=2,
+            var_theta=True,
+            true_eps=False,
+            alpha=9e-1,
+            dynamic_alpha=True,
+            # multiplier = 1 for factor 2 and iid 10 and psi expt
+            alpha_multiplier=[1e1]*4,
+            delta_or_psi='psi',
+            psi=1e4,
             topology='rgg',
             delta_multiplier=0.99,
             dynamic_delta=False,
@@ -671,8 +655,8 @@
 ++++ fmnist non-iid 1
 
             dataset='fmnist',
-            num_workers=125,
-            num_clusters=[25, 5, 1],
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
@@ -701,7 +685,8 @@
             true_eps=False,
             alpha=9e-1,
             dynamic_alpha=True,
-            alpha_multiplier=[1e4, 1e4, 1e4],
+            # multiplier = 1 for factor 2 and iid 10 and psi expt
+            alpha_multiplier=[1e4]*4,
             delta_or_psi='psi',
             psi=1e5,
             topology='rgg',
@@ -713,16 +698,12 @@
             eps_multiplier=1.0001,
             kappa=1,
 
+
 5. kappa experiment for comparing the number of iterations taken vs planned
 
-            num_train=60000,
-            num_test=10000,
-            # num_workers=200,
-            # num_clusters=[10, 5, 2, 1],
-            # num_workers=500,
-            # num_clusters=[100, 20, 4, 1],
-            num_workers=125,
-            num_clusters=[25, 5, 1],
+            dataset='mnist',
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             # for more gap among consensus
             # more workers
             # higher degree
@@ -731,8 +712,8 @@
             batch_size=False,
             test_batch_size=64,
             epochs=25,
-            lr=0.004,
-            nesterov=False,
+            lr=0.006,
+            nesterov=True,
             eta=10,
             decay=1e-1, # try values 0.6, 0.4, 0.2 for kappa expt
             no_cuda=False,
@@ -747,21 +728,14 @@
             rounds=2,
             radius=0.6,
             use_same_graphs=True,
-            # graphs='topology_rgg_degree_3.2_rho_0.7500.pkl',
-            graphs=[
-                'topology_rgg_degree_2.0_rho_0.8750.pkl',
-                'topology_rgg_degree_3.2_rho_0.7500.pkl',
-                'topology_rgg_degree_4.0_rho_0.3750.pkl',
-            ],
-            # radius=[0.6, 0.7, 0.9],
+            graph='multi',
             d2d=1.0,
             factor=4,
             var_theta=True,
             true_eps=False,
             alpha=9e-1,
             dynamic_alpha=True,
-            # 1 from 2.5 to 2
-            alpha_multiplier=[2e6, 1e12, 1e2],
+            alpha_multiplier=[1e10]*4,
             delta_or_psi = 'delta',
             psi=1e-6,
             topology='rgg',
@@ -776,15 +750,8 @@
 ++++ fmnist non iid 1
 
             dataset='fmnist',
-            # num_workers=200,
-            # num_clusters=[10, 5, 2, 1],
-            # num_workers=500,
-            # num_clusters=[100, 20, 4, 1],
-            num_workers=125,
-            num_clusters=[25, 5, 1],
-            # for more gap among consensus
-            # more workers
-            # higher degree
+            num_workers=625,
+            num_clusters=[125, 25, 5, 1],
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
@@ -813,7 +780,6 @@
             true_eps=False,
             alpha=9e-1,
             dynamic_alpha=True,
-            # multiplier = 1 for factor 2 and iid 10 and psi expt
             alpha_multiplier=[1e4, 1e4, 1e4],
             delta_or_psi='psi',
             psi=1e-1,

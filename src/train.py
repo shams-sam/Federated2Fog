@@ -65,7 +65,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
         node_model = worker_models[w].get()
         worker_optims[w] = optim.SGD(
             params=node_model.parameters(),
-            lr=args.lr*(1-args.lr/10)**epoch if args.nesterov else args.lr,
+            lr=args.lr*np.exp(-0.01*epoch) if args.nesterov else args.lr,
             weight_decay=args.decay if loss_fn == 'hinge' else 0,)
         data = worker_data[w].get()
         target = worker_targets[w].get()
