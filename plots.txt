@@ -1,53 +1,150 @@
 comparison of rounds of consensus
 =================================
 
-MNIST
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_1_num_workers_200_lr_0.003_batch_300_laplace_1_2_5_15_30_0.2_1.0_8.png
+MNIST 125
+mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_1_2_5_15_30_0.6_1.0_2.eps
+
+MNIST 625
+mnist_svm_fog_uniform_non_iid_1_num_workers_625_lr_0.01_batch_96_laplace_1_2_5_15_30_graph_multi_1.0_2.eps
+
+FMNIST 125
+fmnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_1_2_5_15_30_0.6_1.0_2.eps
+
+FMNIST 625
+fmnist_svm_fog_uniform_non_iid_1_num_workers_625_lr_0.01_batch_96_laplace_1_2_5_15_30_graph_multi_1.0_2.eps
+
+
 
 
 effect of lr decay on convergence
 =================================
 
-MNIST
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_1_num_workers_200_lr_0.01_batch_32_laplace_2_0.7_1.0_32.png
+MNIST 125
+mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_factor_32.eps
+
+MNIST 625
+fmnist_svm_fog_uniform_non_iid_1_num_workers_625_lr_0.01_batch_96_laplace_factor_32.eps
+
+FMNIST 125
+fmnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_factor_32.eps
+
+FMNIST 625
+fmnist_svm_fog_uniform_non_iid_1_num_workers_625_lr_0.01_batch_96_laplace_factor_32.eps
+
 
 
 
 effect of varying sigma
 =======================
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_decay_0.1_batch_32_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.png
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_decay_0.1_batch_32_laplace_alphas_0.01_0.1_0.6_0.9_radius_multi_d2d_1.0_factor_2_alpha.png
 
-variable sigma and decay of consensus rounds
+MNIST 125
+mnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_decay_0.1_batch_480_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.eps
+mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_decay_0.1_batch_480_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.eps
 
-Comparison Sigmas
-=================
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_decay_0.1_batch_32_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.png
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_decay_0.1_batch_32_laplace_alphas_0.01_0.1_0.6_0.9_radius_multi_d2d_1.0_factor_2_alpha.png
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_32_laplace_alphas_0.01_0.1_0.6_0.9_radius_multi_d2d_1.0_factor_2_alpha.png
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_32_laplace_alphas_0.01_0.1_0.6_0.9_radius_topology_rgg_degree_2.0_rho_0.8750.pkl_d2d_1.0_factor_2_alpha.png
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_32_laplace_alphas_0.01_0.1_0.6_0.9_radius_topology_rgg_degree_2.0_rho_0.8750.pkl_d2d_1.0_factor_2_alpha.png
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_32_laplace_alphas_0.1_0.6_0.9_radius_%5B'topology_rgg_degree_2.0_rho_0.8750.pkl'%2C%20'topology_rgg_degree_3.2_rho_0.7500.pkl'%2C%20'topology_rgg_degree_4.0_rho_0.3750.pkl'%5D_d2d_1.0_factor_2_alpha.png
+MNIST 625
+fmnist_svm_fog_uniform_non_iid_10_num_workers_625_lr_0.01_decay_0.1_batch_96_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.eps
+fmnist_svm_fog_uniform_non_iid_1_num_workers_625_lr_0.01_decay_0.1_batch_96_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.eps
+
+FMNIST 125
+fmnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_decay_0.1_batch_480_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.eps
+fmnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_decay_0.1_batch_480_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.eps
+
+FMNIST 625
+fmnist_svm_fog_uniform_non_iid_10_num_workers_625_lr_0.01_decay_0.1_batch_96_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.eps
+fmnist_svm_fog_uniform_non_iid_1_num_workers_625_lr_0.01_decay_0.1_batch_96_laplace_alphas_0.01_0.1_0.6_0.9_radius_graph_multi_d2d_1.0_factor_2_alpha.eps
+
+
+
 
 Comparison Deltas
 ================
 
-MNIST
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.png
-http://localhost:18888/view/Federated2Fog/plots/_mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.png
+MNIST 125
+mnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.eps
+mnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.eps
 
-FMNIST
-http://localhost:18888/view/Federated2Fog/plots/fmnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.png
-http://localhost:18888/view/Federated2Fog/plots/fmnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.png
+MNIST 625
+mnist_svm_fog_uniform_non_iid_10_num_workers_625_lr_0.01_batch_96_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.eps
+mnist_svm_fog_uniform_non_iid_1_num_workers_625_lr_0.01_batch_96_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.eps
+
+FMNIST 125
+fmnist_svm_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.eps
+fmnist_svm_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.eps
+
+FMNIST 625
+fmnist_svm_fog_uniform_non_iid_10_num_workers_625_lr_0.01_batch_96_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.eps
+fmnist_svm_fog_uniform_non_iid_1_num_workers_625_lr_0.01_batch_96_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_4_deltas_0.99_0.95_0.9_0.8_omega_1.1.eps
+
+
+
 
 Comparison psis
 ===============
 
-MNIST
-http://localhost:18888/view/Federated2Fog/plots/_mnist_fcn_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_64_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_10000.0_1000.0_100.0_10.0_1.0_0.1.png
-http://localhost:18888/view/Federated2Fog/plots/_mnist_fcn_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_64_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_10000.0_1000.0_100.0_10.0_1.0_0.1.png
+MNIST 125
+fmnist_fcn_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_100000.0_10000.0_1000.0_100.0_10.0.eps
+mnist_fcn_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_100000.0_10000.0_1000.0_100.0_10.0.eps
+
+MNIST 625
+mnist_fcn_fog_uniform_non_iid_10_num_workers_625_lr_0.01_batch_96_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_100000.0_10000.0_1000.0_100.0_10.0.eps
+mnist_fcn_fog_uniform_non_iid_1_num_workers_625_lr_0.01_batch_96_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_100000.0_10000.0_1000.0_100.0_10.0.eps
+
+FMNIST 125
+fmnist_fcn_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_100000.0_10000.0_1000.0_100.0_10.0.eps
+fmnist_fcn_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_100000.0_10000.0_1000.0_100.0_10.0.eps
+
+FMNIST 625
+fmnist_fcn_fog_uniform_non_iid_10_num_workers_625_lr_0.01_batch_96_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_100000.0_10000.0_1000.0_100.0_10.0.eps
+fmnist_fcn_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_480_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_100000.0_10000.0_1000.0_100.0_10.0.eps
 
 
-FMNIST
-http://localhost:18888/view/Federated2Fog/plots/fmnist_fcn_fog_uniform_non_iid_10_num_workers_125_lr_0.01_batch_64_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_10000.0_1000.0_100.0_10.0_1.0_0.1.png
-http://localhost:18888/view/Federated2Fog/plots/fmnist_fcn_fog_uniform_non_iid_1_num_workers_125_lr_0.01_batch_64_laplace_alpha_0.9_radius_graph_multi_d2d_1.0_factor_2_psis_10000.0_1000.0_100.0_10.0_1.0_0.1.png
+
+
+Comparison theory practice
+==========================
+
+MNIST 125
+comparison_eut_lut_power_mnist_125.eps
+
+MNIST 625
+comparison_eut_lut_power_mnist_625.eps
+
+FMNIST 125
+comparison_eut_lut_power_fmnist_125.eps
+
+FMNIST 625
+comparison_eut_lut_power_fmnist_625.eps
+
+
+
+Comparsion power consumption
+============================
+
+MNIST 125
+comparison_eut_lut_power_mnist_125.eps
+
+MNIST 625
+comparison_eut_lut_power_mnist_625.eps
+
+FMNIST 125
+comparison_eut_lut_power_fmnist_125.eps
+
+FMNIST 625
+comparison_eut_lut_power_fmnist_625.eps
+
+
+
+Comparison parameters accumulated
+=================================
+
+MNIST 125
+comparison_eut_lut_power_mnist_125.eps
+
+MNIST 625
+comparison_eut_lut_power_mnist_625.eps
+
+FMNIST 125
+comparison_eut_lut_power_fmnist_125.eps
+
+FMNIST 625
+comparison_eut_lut_power_fmnist_625.eps
