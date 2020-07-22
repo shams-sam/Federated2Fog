@@ -19,7 +19,7 @@
 - Download the data from the drive link provided to access the generated plots.
 
 ### Misc.
-Also availabe in the drive link (above)  provided:
+Also available in the drive link (above)  provided:
 - Pretrained models 
 - Training histories 
 - Training logs
