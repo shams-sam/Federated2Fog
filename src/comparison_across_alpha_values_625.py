@@ -4,9 +4,9 @@ import numpy as np
 import pickle as pkl
 
 
-matplotlib.rcParams.update({'font.size': 37})
-matplotlib.rcParams['lines.linewidth'] = 2.0
-matplotlib.rcParams['lines.markersize'] = 8
+matplotlib.rcParams.update({'font.size': 39})
+matplotlib.rcParams['lines.linewidth'] = 4.0
+matplotlib.rcParams['lines.markersize'] = 16
 
 dataset = 'fmnist'
 clf = 'svm'
@@ -29,7 +29,7 @@ num_layer = 4
 rows = 3
 cols = 3
 fig = plt.figure(figsize=(10*cols, 4*rows))
-grid = plt.GridSpec(2, 12, hspace=.6, wspace=7)
+grid = plt.GridSpec(2, 12, hspace=.6, wspace=10)
 axs = [
     '', '',
     fig.add_subplot(grid[0, 0:4]),
@@ -91,13 +91,13 @@ for line in ['accuracy', 'loss', 'rounds'] + \
                         
         ax.set_xlabel('$k$')
         if line == 'layer_0':
-            line = r'$\overline{\theta^{(k)}_{\mathcal{L}^4}}$'
+            line = r'$\overline{\theta^{(k)}_{{L}_4}}$'
         elif line=='layer_1':
-            line = r'$\overline{\theta^{(k)}_{\mathcal{L}^3}}$'
+            line = r'$\overline{\theta^{(k)}_{{L}_3}}$'
         elif line =='layer_2':
-            line = r'$\overline{\theta^{(k)}_{\mathcal{L}^2}}$'
+            line = r'$\overline{\theta^{(k)}_{{L}_2}}$'
         elif line =='layer_3':
-            line = r'$\overline{\theta^{(k)}_{\mathcal{L}^1}}$'
+            line = r'$\overline{\theta^{(k)}_{{L}_1}}$'
         elif line == 'rounds':
             line = r'$\overline{\theta^{(k)}}$'
         elif line == 'loss':
@@ -106,13 +106,13 @@ for line in ['accuracy', 'loss', 'rounds'] + \
         ax.set_xlim(left=0, right=25)
         ax.grid(True)
         # ax.set_xlim(left=0, right=50)
-        ax.set_title('({})'.format(title[idx]), y=-0.5)
+        ax.set_title('({})'.format(title[idx]), y=-0.55)
         if idx == 3:
             ax.legend(loc='upper right', ncol=5, bbox_to_anchor=(-1, 1.1, 3.0, .25), mode='expand', frameon=False)
 file_name = '../plots/{}_{}_fog_uniform_non_iid_{}_num_workers_{}_lr_{}_decay_{}_batch_{}_laplace_alphas_{}_radius_{}_d2d_{}_factor_{}_alpha'.format(
        dataset, clf, non_iid, n, lr, decay, b, '_'.join(list(map(str, alpha))), radius, d2d, factor
 )
 print('Saving: ', file_name)
-fig.subplots_adjust(wspace=0.3, hspace=0.4)
+fig.subplots_adjust(wspace=0.35, hspace=0.5)
 for format_ in ['png', 'eps']:
     plt.savefig(file_name + '.' + format_, bbox_inches='tight', dpi=300, format=format_)

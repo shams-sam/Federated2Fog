@@ -6,10 +6,10 @@ import pickle as pkl
 
 matplotlib.rcParams.update({'font.size': 37})
 matplotlib.rcParams['lines.linewidth'] = 2.0
-matplotlib.rcParams['lines.markersize'] = 8
+matplotlib.rcParams['lines.markersize'] = 10
 
 
-fig = plt.figure(figsize=(30, 8))
+fig = plt.figure(figsize=(30, 7))
 
 epochs = 50
 
@@ -64,7 +64,7 @@ for line in ['accuracy', 'loss']:
         ax.set_ylabel(line)
         ax.grid(True)
         ax.set_xlim(left=0, right=epochs)
-        plt.title('({})'.format(title[idx]), y=-0.3)
+        plt.title('({})'.format(title[idx]), y=-0.35)
         if idx == 3:
             ax.legend(loc='upper right', ncol=4, bbox_to_anchor=(-1.25, 1.1, 2.25, .1), mode='expand', frameon=False)
 file_name = '../plots/{}_svm_fog_uniform_non_iid_1_num_workers_{}_lr_0.01_batch_{}_laplace_factor_{}'.format(dataset, n, b, factor)

@@ -5,8 +5,8 @@ import pickle as pkl
 
 
 matplotlib.rcParams.update({'font.size': 37})
-matplotlib.rcParams['lines.linewidth'] = 2.0
-matplotlib.rcParams['lines.markersize'] = 8
+matplotlib.rcParams['lines.linewidth'] = 4.0
+matplotlib.rcParams['lines.markersize'] = 16
 
 
 dataset = 'fmnist'
@@ -33,7 +33,7 @@ factor = 2
 # epochs = 50
 # factor = 8
 
-fig = plt.figure(figsize=(30, 8))
+fig = plt.figure(figsize=(30, 7))
 log_base = np.exp(1)
 label = 2
 
@@ -94,7 +94,7 @@ for line in ['accuracy', 'loss', 'loss (log scale)']:
         ax.set_ylabel(line)
         ax.grid(True)
         ax.set_xlim(left=0, right=25)
-        plt.title('({})'.format(title[idx]), y=-0.3)
+        plt.title('({})'.format(title[idx]), y=-0.35)
         if idx == 3:
             ax.legend(loc='upper right', ncol=6, bbox_to_anchor=(-1.35, 1.1, 3.7, .1), mode='expand', frameon=False)
 file_name = '../plots/{}_{}_fog_uniform_non_iid_{}_num_workers_{}_lr_{}_batch_{}_laplace_{}_{}_{}_{}'.format(
