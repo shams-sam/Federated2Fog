@@ -1,4 +1,7 @@
 ## Federated2Fog
+
+![Fog Network](Federated2Fog.png)
+
 - ArXiv: [Multi-Stage Hybrid Federated Learning over Large-Scale Wireless Fog Networks](https://arxiv.org/abs/2007.09511)
 - Github: [Federated2Fog](https://github.com/shams-sam/Federated2Fog)
 - Data and Code: [Drive Link](https://drive.google.com/file/d/1K89GiVj2Bti8aBu4khxcG4k0TtpAMgKj/view?usp=sharing)
@@ -25,3 +28,14 @@ Also available in the drive link (above)  provided:
 - Training logs
 - Preprocessed datasets
 - etc.
+
+### Citation
+If you find Federated2Fog useful, please cite the following paper
+```
+@article{hosseinalipour2020multi,
+  title={Multi-Stage Hybrid Federated Learning over Large-Scale D2D-Enabled Fog Networks},
+  author={Hosseinalipour, S and Azam, SS and Brinton, CG and Michelusi, N and Aggarwal, V and Love, DJ and Dai, H},
+  journal={arXiv preprint arXiv:2007.09511},
+  year={2020}
+}
+```
