@@ -1,5 +1,7 @@
 ## Federated2Fog
 
+**Please note that the code here is corresponding to the equations in v4 of paper on ArXiv. for versions > v4 of the the paper, we have updated equations which tighten the bounds of corresponding equations in v4. Similar plots can be obtained using the updated equations by adjusting the value of $\chi$ as mentioned on page 12 of updated manuscripts.**
+
 ![Fog Network](Federated2Fog.png)
 
 - ArXiv: [Multi-Stage Hybrid Federated Learning over Large-Scale Wireless Fog Networks](https://arxiv.org/abs/2007.09511)
