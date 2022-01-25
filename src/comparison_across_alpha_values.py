@@ -25,7 +25,7 @@ matplotlib.rcParams['lines.markersize'] = 16
 # factor = 16
 # num_layer = 4
 
-dataset = 'fmnist'
+dataset = 'mnist'
 clf = 'svm'
 lr = 0.01
 decay = 0.1
@@ -34,7 +34,7 @@ b = 480
 n = 125
 radius = 1.0
 d2d = 1.0
-non_iids = [10]
+non_iids = [1]
 alpha = [1e-2, 1e-1, 6e-1, 9e-1]
 epochs = 25# 50
 factor = 2

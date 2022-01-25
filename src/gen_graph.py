@@ -36,6 +36,7 @@ while save == 'r':
         radius = radius/10
         counter = 0
         while not in_range(avg_deg, degree+tolerance, degree-tolerance):
+            print('radius:', radius)
             graph = get_connected_graph(num_nodes, radius, topology)
             if not graph:
                 break

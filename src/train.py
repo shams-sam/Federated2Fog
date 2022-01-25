@@ -17,7 +17,8 @@ from utils import flip, get_dataloader
 def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
               device, epoch, loss_fn, consensus,
               rounds, radius, d2d, factor=10,
-              alpha_store={}, prev_grad=0, shuffle_worker_data=False):
+              alpha_store={}, prev_grad=0, shuffle_worker_data=False,
+              simple_avg=False):
     # fog learning with model averaging
     if loss_fn == 'nll':
         loss_fn_ = F.nll_loss
@@ -58,7 +59,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
     for w, x, y in zip(workers, X_trains, y_trains):
         worker_data[w] = x.send(nodes[w])
         worker_targets[w] = y.send(nodes[w])
-        worker_num_samples[w] = x.shape[0]
+        worker_num_samples[w] = x.shape[0] if not simple_avg else 1
 
     for w in workers:
         worker_models[w] = model.copy().send(nodes[w])
@@ -153,6 +154,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
                         alpha = alpha_store[a]
                         rounds = estimate_rounds(alpha, num_nodes_in_cluster,
                                                  eps, lamda)
+                        # rounds = 15
                     agg_log += [rounds, a, lamda,
                                 alpha, num_nodes_in_cluster]
                     try:
@@ -182,7 +184,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
     print(table.table)
     assert len(aggregators) == 1
     master = get_model_weights(worker_models[aggregators[0]].get(),
-                               1/args.num_train)
+                               1/(args.num_train if not simple_avg else len(workers)))
 
     grad = model_gradient(model.state_dict(), master, args.lr)
     model.load_state_dict(master)
@@ -198,7 +200,7 @@ def fog_train(args, model, fog_graph, nodes, X_trains, y_trains,
 
 
 def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
-             device, epoch, loss_fn='nll'):
+             device, epoch, loss_fn='nll', simple_avg=False):
     # federated learning with model averaging
 
     if loss_fn == 'nll':
@@ -241,6 +243,7 @@ def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
             loss = loss_fn_(output, target)
             loss.backward()
             worker_optims[w].step()
+            # break
         worker_models[w] = node_model.send(nodes[w])
         worker_losses[w] = loss.item()
 
@@ -254,7 +257,8 @@ def fl_train(args, model, fog_graph, nodes, X_trains, y_trains,
     with torch.no_grad():
         weighted_models = [get_model_weights(
             worker_models[_],
-            worker_num_samples[_]/args.num_train) for _ in children]
+            worker_num_samples[_]/args.num_train if not simple_avg else 1.0/len(workers))
+                           for _ in children]
         model_sum = weighted_models[0]
         for m in weighted_models[1:]:
             model_sum = add_model_weights(model_sum, m)

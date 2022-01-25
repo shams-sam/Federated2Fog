@@ -52,7 +52,7 @@ def assign_classes(classes, num_nodes, n):
 def get_distributed_data(X_train, y_train, num_parts,
                          stratify=True, repeat=False,
                          uniform=True, shuffle=True,
-                         non_iid=10, num_classes=10):
+                         non_iid=10, num_classes=10, rdm='random'):
     if shuffle:
         for _ in range(10):
             perm = np.random.permutation(X_train.shape[0])
@@ -105,10 +105,12 @@ def get_distributed_data(X_train, y_train, num_parts,
                     crossover[idx:] += 1
                 assert crossover[-1] == X_cls.shape[0]
             else:
-                crossover = [0] + \
-                    list(sorted(random.sample(
-                        range(2, X_cls.shape[0]), num_splits-1))) \
-                    + [X_cls.shape[0]]
+                if rdm == 'random':
+                    mid = list(sorted(random.sample(range(2, X_cls.shape[0]), num_splits-1)))
+                elif rdm == 'weighted':
+                    l = list(_**100 for _ in range(2, X_cls.shape[0]))
+                    mid = sorted(np.random.choice(range(2, X_cls.shape[0]), num_splits-1, p=[_/sum(l) for _ in l]))
+                crossover = [0] + mid + [X_cls.shape[0]]
             for id_ in range(len(node_list)):
                 X_trains[node_list[id_]].append(
                     X_cls[crossover[id_]: crossover[id_+1]])

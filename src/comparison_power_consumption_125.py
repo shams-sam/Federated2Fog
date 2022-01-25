@@ -10,7 +10,7 @@ matplotlib.rcParams['lines.markersize'] = 8
 
 fig = plt.figure(figsize=(10, 8))
 
-dataset = 'mnist'
+dataset = 'fmnist'
 clf = 'svm'
 non_iid = [1, 10]
 num_workers = 125
@@ -81,7 +81,7 @@ for lut_file, eut_file in zip(
 width = 0.2
 x_ax = np.array(x_ax)
 plt.bar(x_ax-width/2, np.array(euts)/10000, width, color='k', label='EUT')
-plt.bar(x_ax+ width/2, np.array(luts)/10000, width, color='r', label='MH-MT')
+plt.bar(x_ax+ width/2, np.array(luts)/10000, width, color='r', label='MH-FL')
 
 
 plt.legend(loc='upper right', ncol=5, bbox_to_anchor=(-0, 1.1, 1.0, .05), mode='expand', frameon=False)

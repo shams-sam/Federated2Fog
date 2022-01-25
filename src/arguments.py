@@ -4,15 +4,15 @@ from math import ceil
 class Arguments():
     def __init__(
             self,
-            dataset='fmnist',
-            num_workers=625,
-            num_clusters=[125, 25, 5, 1],
+            dataset='mnist',
+            num_workers=125,
+            num_clusters=[25, 5, 1],
             uniform_clusters=True,
             shuffle_workers=False,
             batch_size=False,
             test_batch_size=64,
             epochs=25,
-            lr=0.004,
+            lr=0.01,
             nesterov=False,
             eta=10,
             decay=1e-1,
@@ -21,7 +21,7 @@ class Arguments():
             log_interval=1,
             save_model=True,
             stratify=True,
-            uniform_data=True,
+            uniform_data=False,
             shuffle_data=True,
             non_iid=1,
             repeat=1,
@@ -30,22 +30,22 @@ class Arguments():
             use_same_graphs=True,
             graph='multi',
             d2d=1.0,
-            factor=4,
+            factor=2,
             var_theta=True,
-            true_eps=False,
-            alpha=9e-1,
-            dynamic_alpha=True,
-            alpha_multiplier=[1e4]*4,
-            delta_or_psi='psi',
-            psi=1e-1,
+            true_eps=True,
+            alpha=1e-2,
+            dynamic_alpha=False,
+            alpha_multiplier=False,
+            delta_or_psi = 'delta',
+            psi=1e-6,
             topology='rgg',
             delta_multiplier=0.99,
             dynamic_delta=False,
-            omega=1.1,
-            F_0=0.0776,
-            F_optim=0,
-            eps_multiplier=1.0001,
-            kappa=1,
+            omega=1.5,
+            F_0=6.250795,
+            F_optim=0.753122,
+            eps_multiplier=1.000001,
+            kappa=15,
     ):
         # data config
         self.dataset = dataset
@@ -79,7 +79,7 @@ class Arguments():
         self.epochs = epochs
         self.lr = lr
         self.nesterov = nesterov
-        self.eta=eta
+        self.eta = eta
         self.decay = decay
         self.no_cuda = no_cuda
         self.seed = seed

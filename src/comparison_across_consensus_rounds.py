@@ -9,7 +9,7 @@ matplotlib.rcParams['lines.linewidth'] = 4.0
 matplotlib.rcParams['lines.markersize'] = 16
 
 
-dataset = 'fmnist'
+dataset = 'mnist'
 clf = 'svm'
 lr = 0.01
 b = 480 #96

@@ -6,6 +6,8 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 from torchvision import datasets, transforms
 
+import config as cfg
+
 
 def flip(p):
     return True if random() < p else False
@@ -22,7 +24,7 @@ def get_testloader(args):
     kwargs = {}
     if args.dataset == 'mnist':
         return torch.utils.data.DataLoader(
-            datasets.MNIST('../data', train=False,
+            datasets.MNIST(cfg.data_root, train=False,
                            transform=transforms.Compose([
                                transforms.ToTensor(),
                                transforms.Normalize((0.1307,), (0.3081,))
@@ -30,7 +32,7 @@ def get_testloader(args):
             batch_size=args.test_batch_size, shuffle=True, **kwargs)
     elif args.dataset == 'cifar':
         return torch.utils.data.DataLoader(
-            datasets.CIFAR10('../data', train=False,
+            datasets.CIFAR10(cfg.data_root, train=False,
                              transform=transforms.Compose([
                                  transforms.ToTensor(),
                                  transforms.Normalize((0.5, 0.5, 0.5),
@@ -38,7 +40,7 @@ def get_testloader(args):
             batch_size=args.test_batch_size, shuffle=True, **kwargs)
     elif args.dataset == 'fmnist':
         return torch.utils.data.DataLoader(
-            datasets.FashionMNIST('../data', train=False,
+            datasets.FashionMNIST(cfg.data_root, train=False,
                                   transform=transforms.Compose([
                                       transforms.ToTensor(),
                                       transforms.Normalize((0.2861,),

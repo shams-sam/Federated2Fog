@@ -56,7 +56,7 @@ for non_iid in range(1, 5):
                                               stratify=args.stratify,
                                               uniform=args.uniform_data,
                                               shuffle=args.shuffle_data,
-                                              non_iid=non_iid)
+                                              non_iid=non_iid, rdm='weighted')
 
     for _ in y_trains:
         print(np.bincount(_))
